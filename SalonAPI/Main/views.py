@@ -15,6 +15,9 @@ class AppointmentsView(APIView):
 
     def get(self, request):
         if not Appointments.objects.exists(): # Seed data if no appointments exist
+            if not SavedServices.objects.exists(): # Seed data if no saved services exist
+                SavedServices.objects.create(ServiceName="Basic Service", ServicePrice=100.00, ServiceDuration=30)
+                SavedServices.objects.create(ServiceName="Premium Service", ServicePrice=200.00, ServiceDuration=60)
             app = Appointments.objects.create(AppStatus="Scheduled")
             UserID = User.objects.get(id=1)
             if ( SavedServices.objects.filter(ServiceName="Basic Service").first()):
