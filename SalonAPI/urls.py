@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 
 from SalonAPI.Main import views
 
@@ -25,6 +25,8 @@ urlpatterns = [
     path('api/savedservices/', views.SavedServicesView.as_view(), name='saved_services'),
     path('api/services/', views.ServicesView.as_view(), name='services'),
     path('api/users/', views.UserView.as_view(), name='users'),
+    path('api/technicians/', views.TechniciansView.as_view(), name='technicians'),
+     path('api-auth/', include('rest_framework.urls')),
     path('', views.AppointmentsView.as_view(), name='appointments')
 
 ]

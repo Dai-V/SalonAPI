@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.db.models import Sum
 
-from SalonAPI.Main.models import Appointments,SavedServices, Services, User
+from SalonAPI.Main.models import Appointments,SavedServices, Services, Technicians, User
 
 
 
@@ -16,13 +16,15 @@ class SavedServicesSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'UserEmail', 'UserPhone', 'UserAddress', 'UserRole', 'UserAdditionalInfo']
+        fields = ['id', 'username', 'password','email', 'UserPhone', 'UserAddress','UserSalonName', 'UserInfo']
+        write_only_fields = ['password']
 
 class ServicesSerializer(serializers.ModelSerializer):
-    User = serializers.StringRelatedField(source='UserID.username', read_only=True)
+    # user = serializers.CurrentUserDefault()
+    # TechID = serializers.ChoiceField(  choices=Technicians.objects.filter(UserID=user.id).values_list('TechID', 'TechName'), required=False,   allow_null=True)
     class Meta:
         model = Services
-        fields = ['ServiceName', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration', 'AppID', 'User']        
+        fields = ['ServiceName', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration', 'AppID', 'TechID']        
 
 class AppointmentSerializer(serializers.ModelSerializer):
     ServicesList = ServicesSerializer(many=True, read_only=True, source='services')
@@ -30,3 +32,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointments
         fields = ['AppID', 'AppDate', 'AppStatus','AppTotal', 'PaymentType','ServicesList']
+
+class TechniciansSerializer(serializers.ModelSerializer):
+    UserID = UserSerializer(read_only=True).field_name='UserID'
+    class Meta:
+        model = Technicians
+        fields = ['TechID', 'TechName', 'TechEmail', 'TechPhone', 'TechSpecialization', 'TechAvailability', 'TechInfo', 'UserID']
+        read_only_fields = ['UserID']
