@@ -14,32 +14,14 @@ class AppointmentsView(APIView):
     serializer_class = AppointmentSerializer
 
     def get(self, request):
-        if not Appointments.objects.exists(): # Seed data if no appointments exist
-            if not SavedServices.objects.exists(): # Seed data if no saved services exist
-                SavedServices.objects.create(ServiceName="Basic Service", ServicePrice=100.00, ServiceDuration=30)
-                SavedServices.objects.create(ServiceName="Premium Service", ServicePrice=200.00, ServiceDuration=60)
-            app = Appointments.objects.create(AppStatus="Scheduled")
-            UserID = User.objects.get(id=1)
-            if ( SavedServices.objects.filter(ServiceName="Basic Service").first()):
-                SavedService1 = SavedServices.objects.filter(ServiceName="Basic Service").first()
-            else: 
-                SavedServices.objects.create(ServiceName="Basic Service", ServicePrice=100.00, ServiceDuration=30)
-            
-            if ( SavedServices.objects.filter(ServiceName="Premium Service").first()):
-                SavedService2 = SavedServices.objects.filter(ServiceName="Premium Service").first()
-            else: 
-                SavedServices.objects.create(ServiceName="Premium Service", ServicePrice=200.00, ServiceDuration=60)
-            
-            Services.objects.create(ServiceName=SavedService1.ServiceName, ServicePrice=SavedService1.ServicePrice,   ServiceDuration=SavedService1.ServiceDuration, AppID=app, UserID=UserID)
-            Services.objects.create(ServiceName=SavedService2.ServiceName, ServicePrice=SavedService2.ServicePrice,   ServiceDuration=SavedService2.ServiceDuration, AppID=app, UserID=UserID)
-            app = Appointments.objects.filter(AppID=app.AppID).update(AppTotal=Services.objects.filter(AppID=app).aggregate(Sum('ServicePrice'))['ServicePrice__sum'])
-        appointments = Appointments.objects.filter(UserID=request.user).order_by('-AppDate')
+        # app = Appointments.objects.filter(AppID=app.AppID).update(AppTotal=Services.objects.filter(AppID=app).aggregate(Sum('ServicePrice'))['ServicePrice__sum'])
+        appointments = Appointments.objects.filter(UserID=request.user.id).order_by('-AppDate')
         serializer = AppointmentSerializer(appointments, many=True)
         json = JSONRenderer().render(serializer.data)
         return Response(json)
     
     def post(self, request):
-        serializer = AppointmentSerializer(data=request.data)
+        serializer = AppointmentSerializer(data=request.data, context={'request':request})
         if serializer.is_valid():
             serializer.save()
             json = JSONRenderer().render(serializer.data)
@@ -56,13 +38,13 @@ class AppointmentsView(APIView):
 
 class SavedServicesView(APIView):
     authentication_classes = [authentication.SessionAuthentication]
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = SavedServicesSerializer
 
     # Get all saved services, if none exist, create some default services
     def get(self, request):    
         if (request.user.is_authenticated):
-            saved_services = SavedServices.objects.filter(UserID=request.user).order_by('ServiceName')
+            saved_services = SavedServices.objects.filter(UserID=request.user.id)
             serializer = SavedServicesSerializer(saved_services, many=True)
             json = JSONRenderer().render(serializer.data)
             return Response(json)
@@ -73,8 +55,8 @@ class SavedServicesView(APIView):
     # Ensure that the service name is unique
     def post(self, request):
         if( request.user.is_authenticated):
-            if (not SavedServices.objects.filter(ServiceName=request.data.get('ServiceName'),UserID=request.user).exists()):
-                serializer = SavedServicesSerializer(data=request.data)
+            if (not SavedServices.objects.filter(ServiceName=request.data.get('ServiceName'),UserID=request.user.id).exists()):
+                serializer = SavedServicesSerializer(data=request.data, context={'request':request})
                 if serializer.is_valid():
                     serializer.save()
                     json = JSONRenderer().render(serializer.data)
@@ -97,14 +79,12 @@ class UserView(APIView):
         return Response(json)
     
     def post(self, request):
-        if (not User.objects.filter(username=request.data.get('username')).exists()):
-            serializer = UserSerializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                json = JSONRenderer().render(serializer.data)
-                return Response(json, status=201)
-            return Response(serializer.errors, status=400)
-        else : return Response({"message": "Username already taken."}, status=400)
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            json = JSONRenderer().render(serializer.data)
+            return Response(json, status=201)
+        return Response(serializer.errors, status=400)
     
 class ServicesView(APIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -122,7 +102,7 @@ class ServicesView(APIView):
     
     def post(self, request):
          if (request.user.is_authenticated):       
-            serializer = ServicesSerializer(data=request.data)
+            serializer = ServicesSerializer(data=request.data, context={'request':request})
             if serializer.is_valid():
                 serializer.save()
                 json = JSONRenderer().render(serializer.data)
@@ -148,11 +128,7 @@ class TechniciansView(APIView):
     
     def post(self, request):
         if (request.user.is_authenticated):
-            data = request.data
-            data._mutable = True
-            data['UserID'] = request.user.id
-            data._mutable = False
-            serializer = TechniciansSerializer(data=data)
+            serializer = TechniciansSerializer(data=request.data, context={'request':request})
             if serializer.is_valid():
                 serializer.save()
                 json = JSONRenderer().render(serializer.data)

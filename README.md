@@ -8,8 +8,8 @@ In-progress Features:
 
 - Service Management: Save default services with configurable durations and prices; allow customization of services per appointment.
 
-- Appointment Management: (More details coming soon.)
+- Appointment Management: Make appointsment that includes services that is prefilled by saved services. Each appointment is tied to a technician(s), and a customer.
 
-- Authentication: For Technicians and salon managers only. 
+- Authentication: For salon managers only. 
 
 Check back later for updates!

@@ -24,9 +24,11 @@ class User(AbstractUser):
 class SavedServices(models.Model):
     ServiceID = models.AutoField(primary_key=True)
     ServiceName = models.CharField(max_length=100)
+    ServiceCode = models.CharField(max_length=20, unique=True, blank=True, null=True)  # e.g., 'BASIC', 'PREMIUM'
+    ServiceDescription = models.TextField(blank=True, null=True)  # e.g., '
     ServicePrice = models.DecimalField(max_digits=10, decimal_places=2)
     ServiceDuration = models.IntegerField()
-    UserID = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_services', blank=True, null=True)
+    UserID = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_services')
 
 class Technicians (models.Model):
     TechID = models.AutoField(primary_key=True)
@@ -40,10 +42,12 @@ class Technicians (models.Model):
 
 class Services(models.Model):
     ServiceName = models.CharField(max_length=100)
+    ServiceCode = models.CharField(max_length=20, unique=True, blank=True, null=True)  
+    ServiceDescription = models.TextField(blank=True, null=True) 
     ServicePrice = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
     ServiceStartTime = models.TimeField(default=time(0,0))
     ServiceDuration = models.IntegerField(default=30)
-    AppID = models.ForeignKey(Appointments, on_delete=models.CASCADE, related_name='services')
+    AppID = models.ForeignKey(Appointments, on_delete=models.CASCADE, related_name='Services')
     TechID = models.ForeignKey(Technicians, on_delete=models.CASCADE, blank=True, null=True) 
 
 

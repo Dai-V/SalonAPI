@@ -7,9 +7,13 @@ from SalonAPI.Main.models import Appointments,SavedServices, Services, Technicia
 
 
 class SavedServicesSerializer(serializers.ModelSerializer):
+    UserID = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
     class Meta:
         model = SavedServices
-        fields = ['ServiceID', 'ServiceName', 'ServicePrice','ServiceDuration']
+        fields = '__all__'
+        read_only_fields = ['UserID']
 
 
 
@@ -20,22 +24,31 @@ class UserSerializer(serializers.ModelSerializer):
         write_only_fields = ['password']
 
 class ServicesSerializer(serializers.ModelSerializer):
+
     # user = serializers.CurrentUserDefault()
     # TechID = serializers.ChoiceField(  choices=Technicians.objects.filter(UserID=user.id).values_list('TechID', 'TechName'), required=False,   allow_null=True)
     class Meta:
         model = Services
-        fields = ['ServiceName', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration', 'AppID', 'TechID']        
+        fields = '__all__'  
 
 class AppointmentSerializer(serializers.ModelSerializer):
-    ServicesList = ServicesSerializer(many=True, read_only=True, source='services')
+    UserID = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+    AppStatus = serializers.HiddenField(default='Created')
+    AppTotal = serializers.HiddenField(
+        default=0)
+    PaymentType = serializers.HiddenField(default='credit_card')
+    Services = ServicesSerializer(many=True, read_only=True)
 
     class Meta:
         model = Appointments
-        fields = ['AppID', 'AppDate', 'AppStatus','AppTotal', 'PaymentType','ServicesList']
+        fields = ['AppID', 'AppDate', 'AppStatus','AppTotal', 'PaymentType','UserID','Services']
 
 class TechniciansSerializer(serializers.ModelSerializer):
-    UserID = UserSerializer(read_only=True).field_name='UserID'
+    UserID = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
     class Meta:
         model = Technicians
         fields = ['TechID', 'TechName', 'TechEmail', 'TechPhone', 'TechSpecialization', 'TechAvailability', 'TechInfo', 'UserID']
-        read_only_fields = ['UserID']
