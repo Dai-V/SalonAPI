@@ -14,7 +14,6 @@ class AppointmentsView(APIView):
     serializer_class = AppointmentSerializer
 
     def get(self, request):
-        # app = Appointments.objects.filter(AppID=app.AppID).update(AppTotal=Services.objects.filter(AppID=app).aggregate(Sum('ServicePrice'))['ServicePrice__sum'])
         appointments = Appointments.objects.filter(UserID=request.user.id).order_by('-AppDate')
         serializer = AppointmentSerializer(appointments, many=True)
         json = JSONRenderer().render(serializer.data)
@@ -55,14 +54,12 @@ class SavedServicesView(APIView):
     # Ensure that the service name is unique
     def post(self, request):
         if( request.user.is_authenticated):
-            if (not SavedServices.objects.filter(ServiceName=request.data.get('ServiceName'),UserID=request.user.id).exists()):
                 serializer = SavedServicesSerializer(data=request.data, context={'request':request})
                 if serializer.is_valid():
                     serializer.save()
                     json = JSONRenderer().render(serializer.data)
                     return Response(json, status=201)
                 return Response(serializer.errors, status=400)
-            else: return Response({"message": "Service already exists."}, status=400)
         else:
             return Response({"message": "User not authenticated."}, status=401)
     
@@ -94,7 +91,7 @@ class ServicesView(APIView):
     def get(self, request):
          if (request.user.is_authenticated):    
             services = Services.objects.all()
-            serializer = ServicesSerializer(services, many=True)
+            serializer = ServicesSerializer(services, many=True, context={'request': request})
             json = JSONRenderer().render(serializer.data)
             return Response(json)
          else:
@@ -105,7 +102,9 @@ class ServicesView(APIView):
             serializer = ServicesSerializer(data=request.data, context={'request':request})
             if serializer.is_valid():
                 serializer.save()
+                AppID = serializer.data.get('AppID')
                 json = JSONRenderer().render(serializer.data)
+                app = Appointments.objects.filter(AppID=AppID).update(AppTotal=Services.objects.filter(AppID=AppID).aggregate(Sum('ServicePrice'))['ServicePrice__sum'])
                 return Response(json, status=201)
             return Response(serializer.errors, status=400)
          else:

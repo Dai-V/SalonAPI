@@ -24,7 +24,7 @@ class User(AbstractUser):
 class SavedServices(models.Model):
     ServiceID = models.AutoField(primary_key=True)
     ServiceName = models.CharField(max_length=100)
-    ServiceCode = models.CharField(max_length=20, unique=True, blank=True, null=True)  # e.g., 'BASIC', 'PREMIUM'
+    ServiceCode = models.CharField(max_length=20)  # e.g., 'BASIC', 'PREMIUM'
     ServiceDescription = models.TextField(blank=True, null=True)  # e.g., '
     ServicePrice = models.DecimalField(max_digits=10, decimal_places=2)
     ServiceDuration = models.IntegerField()
@@ -42,7 +42,7 @@ class Technicians (models.Model):
 
 class Services(models.Model):
     ServiceName = models.CharField(max_length=100)
-    ServiceCode = models.CharField(max_length=20, unique=True, blank=True, null=True)  
+    ServiceCode = models.CharField(max_length=20)  
     ServiceDescription = models.TextField(blank=True, null=True) 
     ServicePrice = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
     ServiceStartTime = models.TimeField(default=time(0,0))
