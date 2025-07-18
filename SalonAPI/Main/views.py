@@ -2,10 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions
-from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
-from django.db.models import Sum
-
-from SalonAPI.Main.models import Appointments, SavedServices, Services, Technicians, User
+from rest_framework.renderers import JSONRenderer
 from SalonAPI.Main.serializers import AppointmentSerializer, SavedServicesSerializer, ServicesSerializer, TechniciansSerializer, UserSerializer
 
 class AppointmentsView(APIView):
@@ -14,7 +11,7 @@ class AppointmentsView(APIView):
     serializer_class = AppointmentSerializer
 
     def get(self, request):
-        appointments = Appointments.objects.filter(UserID=request.user.id).order_by('-AppDate')
+        appointments = AppointmentSerializer.getAllByUser(request.user)
         serializer = AppointmentSerializer(appointments, many=True)
         json = JSONRenderer().render(serializer.data)
         return Response(json)
@@ -31,8 +28,8 @@ class AppointmentsView(APIView):
     
     
     def delete(self, request):
-        Appointments.objects.filter(UserID=request.user).delete()
-        json = JSONRenderer().render({"message": "All appointments and services deleted successfully."})
+        deleteCount = AppointmentSerializer.deleteAllByUser(request.user)[0]
+        json = JSONRenderer().render({"message": str(deleteCount) + " appointment(s) deleted successfully."} )
         return Response(json)
 
 class SavedServicesView(APIView):
@@ -43,7 +40,7 @@ class SavedServicesView(APIView):
     # Get all saved services, if none exist, create some default services
     def get(self, request):    
         if (request.user.is_authenticated):
-            saved_services = SavedServices.objects.filter(UserID=request.user.id)
+            saved_services = SavedServicesSerializer.getSavedServicesByUser(request.user)
             serializer = SavedServicesSerializer(saved_services, many=True)
             json = JSONRenderer().render(serializer.data)
             return Response(json)
@@ -65,13 +62,11 @@ class SavedServicesView(APIView):
     
 
 class UserView(APIView):
-    authentication_classes = [authentication.SessionAuthentication]
-    permission_classes = [permissions.IsAdminUser]
+
 
     serializer_class = UserSerializer
     def get(self, request):
-        user = User.objects.filter(id=request.user.id).first()
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(request.user)
         json = JSONRenderer().render(serializer.data)
         return Response(json)
     
@@ -90,8 +85,8 @@ class ServicesView(APIView):
 
     def get(self, request):
          if (request.user.is_authenticated):    
-            services = Services.objects.all()
-            serializer = ServicesSerializer(services, many=True, context={'request': request})
+            services = ServicesSerializer.getAll()
+            serializer = ServicesSerializer(services, many=True, context={'request': request}  )
             json = JSONRenderer().render(serializer.data)
             return Response(json)
          else:
@@ -101,10 +96,8 @@ class ServicesView(APIView):
          if (request.user.is_authenticated):       
             serializer = ServicesSerializer(data=request.data, context={'request':request})
             if serializer.is_valid():
-                serializer.save()
-                AppID = serializer.data.get('AppID')
-                json = JSONRenderer().render(serializer.data)
-                app = Appointments.objects.filter(AppID=AppID).update(AppTotal=Services.objects.filter(AppID=AppID).aggregate(Sum('ServicePrice'))['ServicePrice__sum'])
+                serializer.save(data=request.data)
+                json = JSONRenderer().render(serializer.data)  
                 return Response(json, status=201)
             return Response(serializer.errors, status=400)
          else:
@@ -118,7 +111,7 @@ class TechniciansView(APIView):
     serializer_class = TechniciansSerializer    
     def get(self, request):
         if (request.user.is_authenticated):    
-            technicians = Technicians.objects.filter(UserID=request.user.id)
+            technicians = TechniciansSerializer.getAllByUser(request.user)
             serializer = TechniciansSerializer(technicians, many=True)
             json = JSONRenderer().render(serializer.data)
             return Response(json)
