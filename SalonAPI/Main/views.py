@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions
 from rest_framework.renderers import JSONRenderer
-from SalonAPI.Main.serializers import AppointmentSerializer, SavedServicesSerializer, ServicesSerializer, TechniciansSerializer, UserSerializer
+from SalonAPI.Main.serializers import AppointmentSerializer, CustomerSerializer, SavedServicesSerializer, ServicesSerializer, TechniciansSerializer, UserSerializer
 
 class AppointmentsView(APIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -23,14 +23,13 @@ class AppointmentsView(APIView):
             json = JSONRenderer().render(serializer.data)
             return Response(json, status=201)
         return Response(serializer.errors, status=400)
-   
-
     
     
     def delete(self, request):
         deleteCount = AppointmentSerializer.deleteAllByUser(request.user)[0]
         json = JSONRenderer().render({"message": str(deleteCount) + " appointment(s) deleted successfully."} )
         return Response(json)
+    
 
 class SavedServicesView(APIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -78,6 +77,32 @@ class UserView(APIView):
             return Response(json, status=201)
         return Response(serializer.errors, status=400)
     
+
+class CustomerView(APIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CustomerSerializer
+
+    def get(self, request):
+        if( request.user.is_authenticated):
+            customers = CustomerSerializer.getAll(request.user)
+            serializer = CustomerSerializer(customers, many=True, context={'request': request})
+            json = JSONRenderer().render(serializer.data)
+        else:
+            json = JSONRenderer().render({"message": "User not authenticated."}, status=401)
+        return Response(json)
+    
+    def post(self, request):
+        if (request.user.is_authenticated):
+            serializer = CustomerSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                serializer.save()
+                json = JSONRenderer().render(serializer.data)
+                return Response(json, status=201)
+            return Response(serializer.errors, status=400)
+        else:
+            return Response({"message": "User not authenticated."}, status=401)
+    
 class ServicesView(APIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -98,7 +123,9 @@ class ServicesView(APIView):
          if (request.user.is_authenticated):       
             if serializer.is_valid():
                 serializer.save(data=request.data)
-                json = JSONRenderer().render(serializer.data)  
+                json = JSONRenderer().render(serializer.data) 
+                # Update the appointment total after saving the service
+                AppointmentSerializer.updateAppTotal(serializer.data['AppID'])
                 return Response(json, status=201)
             return Response(serializer.errors, status=400)
          else:
@@ -128,6 +155,39 @@ class TechniciansView(APIView):
                 return Response(json, status=201)
             return Response(serializer.errors, status=400)
         else :
+            return Response({"message": "User not authenticated."}, status=401)
+        
+class TotalsView(APIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if (request.user.is_authenticated):
+            total_appointments = AppointmentSerializer.getAllByUser(request.user).count()
+            total_services = ServicesSerializer.getAll().count()
+            total_technicians = TechniciansSerializer.getAllByUser(request.user).count()
+            total_earnings = sum(
+                appointment.AppTotal for appointment in AppointmentSerializer.getAllByUser(request.user)
+            )
+            total_closed_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed').count()
+            total_venmo_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Venmo').count()
+            total_cash_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Vash').count()
+            total_credit_card_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Card').count()
+            total_customers = CustomerSerializer.getAll(request.user).count()
+            json = JSONRenderer().render({
+                "total_appointments": total_appointments,
+                "total_services": total_services,
+                "total_technicians": total_technicians,
+                "total_customers": total_customers,
+                "total_earnings": total_earnings,
+                "total_closed_appointments": total_closed_appointments,
+                "total_venmo_appointments": total_venmo_appointments,   
+                "total_cash_appointments": total_cash_appointments,
+                "total_credit_card_appointments": total_credit_card_appointments,
+
+            })
+            return Response(json)
+        else:
             return Response({"message": "User not authenticated."}, status=401)
 
         

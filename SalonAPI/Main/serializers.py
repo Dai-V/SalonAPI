@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.db.models import Sum
 
-from SalonAPI.Main.models import Appointments,SavedServices, Services, Technicians, User
+from SalonAPI.Main.models import Appointments, Customer,SavedServices, Services, Technicians, User
 
 
 
@@ -32,6 +32,21 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'password','email', 'UserPhone', 'UserAddress','UserSalonName', 'UserInfo']
 
+
+class CustomerSerializer(serializers.ModelSerializer):
+    UserID = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+    def getAll(User):
+        return Customer.objects.filter(UserID=User).order_by('CustomerFirstName')
+    
+    def getServiceHistory(CustomerID):
+        return AppointmentSerializer.getAppByCustomer(CustomerID)
+    
+    class Meta:
+        model = Customer
+        fields = ['CustomerID', 'CustomerFirstName', 'CustomerLastName', 'CustomerEmail', 'CustomerPhone', 'CustomerAddress', 'CustomerInfo', 'UserID']
+
 class ServicesSerializer(serializers.ModelSerializer):
   
     
@@ -45,18 +60,13 @@ class ServicesSerializer(serializers.ModelSerializer):
                 ],
             )
            
-
-
-
-
     def getAll():
         return Services.objects.all()
 
     def save(self,data):
-        id = data.get('AppID')
-        App = Appointments.objects.get(AppID=id)
-        Appointments.objects.update(AppTotal=Services.objects.filter(AppID=App).aggregate(Sum('ServicePrice'))['ServicePrice__sum'])
         return super().save()
+    
+ 
  
     class Meta:
         model = Services
@@ -68,12 +78,11 @@ class AppointmentSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
-    AppStatus = serializers.ReadOnlyField(default='Created')
+    AppStatus = serializers.ReadOnlyField(default='Open')
     AppTotal = serializers.ReadOnlyField(
         default=0)
-    PaymentType = serializers.ReadOnlyField(default='credit_card')
+    PaymentType = serializers.ReadOnlyField(default='Card')
     Services = ServicesSerializer(many=True, read_only=True)
-
     def getAllByUser(User):
         appointments = Appointments.objects.filter(UserID=User).order_by('-AppDate')
         return appointments
@@ -82,9 +91,18 @@ class AppointmentSerializer(serializers.ModelSerializer):
         count = Appointments.objects.filter(UserID=User).delete()
         return count
 
+    def updateAppTotal(AppID):
+        App = Appointments.objects.get(AppID=AppID)
+        App.AppTotal = Services.objects.filter(AppID=App).aggregate(Sum('ServicePrice'))['ServicePrice__sum']
+        App.save()
+        return App 
+    
+    def getAppByCustomer(CustomerID):
+        App = Appointments.objects.filter(CustomerID=CustomerID)
+        return App
     class Meta:
         model = Appointments
-        fields = ['AppID', 'AppDate', 'AppStatus','AppTotal', 'PaymentType','UserID','Services']
+        fields = ['AppID', 'AppDate', 'AppStatus','AppTotal', 'PaymentType','UserID','Services', 'CustomerID']
 
 class TechniciansSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(

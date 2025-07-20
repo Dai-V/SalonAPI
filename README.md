@@ -15,4 +15,6 @@ In-progress Features:
 Check back later for updates!
 
 To-do:
-
+Customer details, including service history
+Appointment details, including all services included
+Technician details, including all techician and service history
