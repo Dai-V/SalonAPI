@@ -33,6 +33,22 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'password','email', 'UserPhone', 'UserAddress','UserSalonName', 'UserInfo']
 
 class ServicesSerializer(serializers.ModelSerializer):
+  
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if(request is not None):
+            self.fields['ServiceCode'] = serializers.ChoiceField(
+                choices=[       
+                    (choice) for choice in SavedServices.objects.filter(UserID=request.user.id).values_list('ServiceCode', flat=True)
+                ],
+            )
+           
+
+
+
+
     def getAll():
         return Services.objects.all()
 
@@ -44,7 +60,9 @@ class ServicesSerializer(serializers.ModelSerializer):
  
     class Meta:
         model = Services
-        fields = '__all__'  
+        fields = ['ServiceName', 'ServiceCode', 'ServiceDescription', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration', 'AppID', 'TechID']
+        
+        
 
 class AppointmentSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(

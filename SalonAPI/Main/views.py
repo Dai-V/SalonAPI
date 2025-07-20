@@ -83,18 +83,19 @@ class ServicesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ServicesSerializer
 
+
     def get(self, request):
          if (request.user.is_authenticated):    
             services = ServicesSerializer.getAll()
-            serializer = ServicesSerializer(services, many=True, context={'request': request}  )
+            serializer = ServicesSerializer(services, many=True, context={'request': request} )
             json = JSONRenderer().render(serializer.data)
             return Response(json)
          else:
             return Response({"message": "User not authenticated."}, status=401)
     
     def post(self, request):
+         serializer = ServicesSerializer(data=request.data, context={'request':request})
          if (request.user.is_authenticated):       
-            serializer = ServicesSerializer(data=request.data, context={'request':request})
             if serializer.is_valid():
                 serializer.save(data=request.data)
                 json = JSONRenderer().render(serializer.data)  

@@ -15,4 +15,4 @@ In-progress Features:
 Check back later for updates!
 
 To-do:
-Move all database stuff to serializers (No objects.all() in views!!!)
+
