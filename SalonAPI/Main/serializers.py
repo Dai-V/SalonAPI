@@ -83,6 +83,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
         default=0)
     PaymentType = serializers.ReadOnlyField(default='Card')
     Services = ServicesSerializer(many=True, read_only=True)
+    CustomerID = serializers.PrimaryKeyRelatedField(read_only=True)
+
     def getAllByUser(User):
         appointments = Appointments.objects.filter(UserID=User).order_by('-AppDate')
         return appointments
@@ -100,9 +102,18 @@ class AppointmentSerializer(serializers.ModelSerializer):
     def getAppByCustomer(CustomerID):
         App = Appointments.objects.filter(CustomerID=CustomerID)
         return App
+    
+    def getAppDetails(User,AppID):
+        if (Appointments.objects.filter(UserID=User, AppID=AppID).exists()):
+            app = Appointments.objects.filter(UserID=User, AppID=AppID)
+            return app
+        else:
+            return None
+    
+  
     class Meta:
         model = Appointments
-        fields = ['AppID', 'AppDate', 'AppStatus','AppTotal', 'PaymentType','UserID','Services', 'CustomerID']
+        fields = ['AppID', 'AppDate', 'AppStatus','AppTotal', 'PaymentType','UserID','Services','CustomerID']
 
 class TechniciansSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(

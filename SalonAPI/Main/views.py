@@ -12,7 +12,7 @@ class AppointmentsView(APIView):
 
     def get(self, request):
         appointments = AppointmentSerializer.getAllByUser(request.user)
-        serializer = AppointmentSerializer(appointments, many=True)
+        serializer = AppointmentSerializer(appointments)
         json = JSONRenderer().render(serializer.data)
         return Response(json)
     
@@ -29,6 +29,34 @@ class AppointmentsView(APIView):
         deleteCount = AppointmentSerializer.deleteAllByUser(request.user)[0]
         json = JSONRenderer().render({"message": str(deleteCount) + " appointment(s) deleted successfully."} )
         return Response(json)
+    
+class AppointmentDetailsView(APIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AppointmentSerializer
+
+    def get(self,request,AppID):
+        app = AppointmentSerializer.getAppDetails(request.user,AppID)
+        if (app is not None):
+            serializer = AppointmentSerializer(app, many=True)
+            json = JSONRenderer().render(serializer.data)
+            return Response(json)
+        return Response({"message": "Appointment does not exist for the requesting account"}, status=404)
+    
+    def put(self,request,AppID):
+        app = AppointmentSerializer.getAppDetails(request.user,AppID)
+        if (app is not None):
+            data = request.data
+            data['AppID'] = AppID
+            serializer = AppointmentSerializer(data=data, context={'request':request})
+            if serializer.is_valid():
+                serializer.save()
+                json = JSONRenderer().render(serializer.data)
+                return Response(json,status=201)
+            return Response(serializer.errors, status=400)
+        return Response({"message": "Appointment does not exist for the requesting account"}, status=404)
+        
+            
     
 
 class SavedServicesView(APIView):
@@ -124,7 +152,6 @@ class ServicesView(APIView):
             if serializer.is_valid():
                 serializer.save(data=request.data)
                 json = JSONRenderer().render(serializer.data) 
-                # Update the appointment total after saving the service
                 AppointmentSerializer.updateAppTotal(serializer.data['AppID'])
                 return Response(json, status=201)
             return Response(serializer.errors, status=400)
