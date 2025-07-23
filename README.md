@@ -16,5 +16,9 @@ Check back later for updates!
 
 To-do:
 Customer details, including service history
-Appointment details, including all services included
-Technician details, including all techician and service history
+
+Technician details, including service history
+
+Checking out an appointment => edit payment type => set app status to closed
+
+Checking in an appointment => set app status to Pending

@@ -7,8 +7,9 @@ from SalonAPI.Main.models import Appointments, Customer,SavedServices, Services,
 
 
 class SavedServicesSerializer(serializers.ModelSerializer):
-    UserID = serializers.HiddenField(
+    UserID = serializers.PrimaryKeyRelatedField(
         default=serializers.CurrentUserDefault()
+        , read_only = True
     )
 
     def getSavedServicesByUser(User):
@@ -33,38 +34,25 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'password','email', 'UserPhone', 'UserAddress','UserSalonName', 'UserInfo']
 
 
-class CustomerSerializer(serializers.ModelSerializer):
-    UserID = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
-    def getAll(User):
-        return Customer.objects.filter(UserID=User).order_by('CustomerFirstName')
+
     
-    def getServiceHistory(CustomerID):
-        return AppointmentSerializer.getAppByCustomer(CustomerID)
-    
-    class Meta:
-        model = Customer
-        fields = ['CustomerID', 'CustomerFirstName', 'CustomerLastName', 'CustomerEmail', 'CustomerPhone', 'CustomerAddress', 'CustomerInfo', 'UserID']
 
 class ServicesSerializer(serializers.ModelSerializer):
   
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request = self.context.get('request')
-        if(request is not None):
-            self.fields['ServiceCode'] = serializers.ChoiceField(
-                choices=[       
-                    (choice) for choice in SavedServices.objects.filter(UserID=request.user.id).values_list('ServiceCode', flat=True)
-                ],
-            )
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     request = self.context.get('request')
+    #     if(request is not None):
+    #         self.fields['ServiceCode'] = serializers.ChoiceField(
+    #             choices=[       
+    #                 (choice) for choice in SavedServices.objects.filter(UserID=request.user.id).values_list('ServiceCode', flat=True)
+    #             ],
+    #         )
            
     def getAll():
         return Services.objects.all()
 
-    def save(self,data):
-        return super().save()
     
  
  
@@ -73,17 +61,38 @@ class ServicesSerializer(serializers.ModelSerializer):
         fields = ['ServiceName', 'ServiceCode', 'ServiceDescription', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration', 'AppID', 'TechID']
         
         
-
+# Get List of customers that is of the current user
+class CustomerSlugRelatedField(serializers.SlugRelatedField):
+    def get_queryset(self):
+        user = self.context['request'].user
+        return Customer.objects.filter(
+            UserID = user.id
+         )
+    
 class AppointmentSerializer(serializers.ModelSerializer):
-    UserID = serializers.HiddenField(
+    UserID = serializers.PrimaryKeyRelatedField(
         default=serializers.CurrentUserDefault()
+        , read_only = True
     )
-    AppStatus = serializers.ReadOnlyField(default='Open')
+    AppStatus = serializers.CharField(default='Open')
     AppTotal = serializers.ReadOnlyField(
         default=0)
-    PaymentType = serializers.ReadOnlyField(default='Card')
+    PaymentType = serializers.CharField(default='Card')
     Services = ServicesSerializer(many=True, read_only=True)
-    CustomerID = serializers.PrimaryKeyRelatedField(read_only=True)
+    CustomerID = CustomerSlugRelatedField(
+        slug_field = "CustomerFirstName"
+    )
+
+
+
+    # def get_CustomerID(self,obj):
+    #     print (self.context.get('request').user.id)
+        
+    #     queryset = Customer.objects.filter(UserID = self.context.get('request').user.id)
+    #     return CustomerSerializer(queryset, context = {'request': self.context.get('request')}).data
+
+
+
 
     def getAllByUser(User):
         appointments = Appointments.objects.filter(UserID=User).order_by('-AppDate')
@@ -116,13 +125,46 @@ class AppointmentSerializer(serializers.ModelSerializer):
         fields = ['AppID', 'AppDate', 'AppStatus','AppTotal', 'PaymentType','UserID','Services','CustomerID']
 
 class TechniciansSerializer(serializers.ModelSerializer):
-    UserID = serializers.HiddenField(
+    UserID = serializers.PrimaryKeyRelatedField(
         default=serializers.CurrentUserDefault()
+        , read_only = True
     )
-
+   
     def getAllByUser(User):
         return Technicians.objects.filter(UserID=User)
     
     class Meta:
         model = Technicians
         fields = ['TechID', 'TechName', 'TechEmail', 'TechPhone', 'TechSpecialization', 'TechAvailability', 'TechInfo', 'UserID']
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    UserID = serializers.PrimaryKeyRelatedField(
+        default=serializers.CurrentUserDefault()
+        , read_only = True
+    )
+    Appointments = AppointmentSerializer(many=True,read_only=True)
+
+
+    def getAll(User):
+        return Customer.objects.filter(UserID=User).order_by('CustomerFirstName')
+    
+    
+    def getCustomer(User,CustomerID):
+        if (Customer.objects.filter(UserID=User,CustomerID=CustomerID).exists()):
+            return Customer.objects.filter(UserID=User,CustomerID=CustomerID)
+        else: return None
+    
+    def getServiceHistory(CustomerID):
+        app = AppointmentSerializer.getAppByCustomer(CustomerID)
+        app = app.filter(AppStatus = "Closed")
+        return app
+    
+    def getStandingAppointments(CustomerID):
+        app = AppointmentSerializer.getAppByCustomer(CustomerID)
+        app = app.filter(AppStatus="Open")
+        return app
+    
+    class Meta:
+        model = Customer
+        fields = ['CustomerID', 'CustomerFirstName', 'CustomerLastName', 'CustomerEmail', 'CustomerPhone', 'CustomerAddress', 'CustomerInfo', 'UserID','Appointments']
