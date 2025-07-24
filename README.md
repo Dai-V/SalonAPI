@@ -23,3 +23,4 @@ Checking out an appointment => edit payment type => set app status to closed
 
 Checking in an appointment => set app status to Pending
 
+
