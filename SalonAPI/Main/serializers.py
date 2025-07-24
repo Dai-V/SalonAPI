@@ -132,9 +132,8 @@ class TechniciansSerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
-    UserID = serializers.PrimaryKeyRelatedField(
+    UserID = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
-        , read_only = True
     )
     Appointments = AppointmentSerializer(many=True,read_only=True)
 
