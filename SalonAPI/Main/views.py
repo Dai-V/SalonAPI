@@ -16,8 +16,6 @@ class AppointmentsView(generics.ListCreateAPIView):
     def get_serializer_context(self):
         return {"request": self.request}
 
-  
-    
 class AppointmentDetailsView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -26,10 +24,6 @@ class AppointmentDetailsView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Appointments.objects.filter(UserID=self.request.user)
 
-  
-        
-            
-    
 
 class SavedServicesView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -50,16 +44,12 @@ class SavedServicesView(generics.ListCreateAPIView):
         else:
             return Response({"message": "Service Code already in use."}, status=401)
         
-
-    
-
 class SavedServiceDetailsView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SavedServicesSerializer
     def get_queryset(self):
         return SavedServices.objects.filter(UserID=self.request.user)
-
 
 class UserView(APIView):
 
@@ -77,7 +67,6 @@ class UserView(APIView):
             return Response(json, status=201)
         return Response(serializer.errors, status=400)
     
-
 class CustomerView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -85,14 +74,12 @@ class CustomerView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Customer.objects.filter(UserID=self.request.user)
 
-    
 class CustomerDetailsView(generics.RetrieveUpdateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CustomerSerializer
     def get_queryset(self):
         return Customer.objects.filter(UserID=self.request.user)
-    
     
 class ServicesView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -101,9 +88,7 @@ class ServicesView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         return Services.objects.filter(AppID__UserID=self.request.user)
-   
-    
-   
+
 class TechniciansView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -112,18 +97,20 @@ class TechniciansView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Technicians.objects.filter(UserID=self.request.user)
     
-  
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
         
 class TechnicianDetailsView(generics.RetrieveUpdateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = TechniciansSerializer    
+    serializer_class = TechniciansSerializer 
    
-
     def get_queryset(self):
         return Technicians.objects.filter(UserID=self.request.user)
     
-
+    def get_serializer_context(self):
+        return {"request": self.request}
 
 class TotalsView(generics.GenericAPIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -157,7 +144,3 @@ class TotalsView(generics.GenericAPIView):
             return Response(json)
         else:
             return Response({"message": "User not authenticated."}, status=401)
-
-        
-    
-

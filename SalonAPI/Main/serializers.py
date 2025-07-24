@@ -19,7 +19,6 @@ class SavedServicesSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
         default = serializers.CurrentUserDefault()
     )
-    ServiceCode = serializers.CharField()
 
  
 
@@ -30,16 +29,7 @@ class SavedServicesSerializer(serializers.ModelSerializer):
         model = SavedServices
         fields = '__all__'
 
-
-
-
-
-
-
-    
-
 class ServicesSerializer(serializers.ModelSerializer):
-  
     
     # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)
@@ -54,9 +44,6 @@ class ServicesSerializer(serializers.ModelSerializer):
     def getAll():
         return Services.objects.all()
 
-    
- 
- 
     class Meta:
         model = Services
         fields = ['ServiceName', 'ServiceCode', 'ServiceDescription', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration', 'AppID', 'TechID']
@@ -82,10 +69,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
     CustomerID = CustomerSlugRelatedField(
         slug_field = "CustomerFirstName"
     )
-
-
-
-
 
     def getAllByUser(User):
         appointments = Appointments.objects.filter(UserID=User).order_by('-AppDate')
@@ -118,17 +101,17 @@ class AppointmentSerializer(serializers.ModelSerializer):
         fields = ['AppID', 'AppDate', 'AppStatus','AppTotal', 'PaymentType','UserID','Services','CustomerID']
 
 class TechniciansSerializer(serializers.ModelSerializer):
-    UserID = serializers.PrimaryKeyRelatedField(
+    UserID = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
-        , read_only = True
     )
-   
+    Services = ServicesSerializer(many=True, read_only=True)
+
     def getAllByUser(User):
         return Technicians.objects.filter(UserID=User)
     
     class Meta:
         model = Technicians
-        fields = ['TechID', 'TechName', 'TechEmail', 'TechPhone', 'TechSpecialization', 'TechAvailability', 'TechInfo', 'UserID']
+        fields = ['TechID', 'TechName', 'TechEmail', 'TechPhone', 'TechSpecialization', 'TechAvailability', 'TechInfo', 'Services', 'UserID']
 
 
 class CustomerSerializer(serializers.ModelSerializer):
