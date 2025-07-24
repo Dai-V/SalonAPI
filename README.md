@@ -15,12 +15,6 @@ In-progress Features:
 Check back later for updates!
 
 To-do:
-Customer details, including service history
 
-Technician details, including service history
-
-Checking out an appointment => edit payment type => set app status to closed
-
-Checking in an appointment => set app status to Pending
 
 

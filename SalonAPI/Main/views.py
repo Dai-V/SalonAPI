@@ -36,13 +36,7 @@ class SavedServicesView(generics.ListCreateAPIView):
     def get_serializer_context(self):
         return {"request": self.request}
     
-    # Ensure that the service name is unique
-    def post(self, request, *args, **kwargs):
-        print(request.data)
-        if (not SavedServices.objects.filter(UserID=request.user.id, ServiceCode=request.data['ServiceCode']).exists()):
-            return self.create(request, *args, **kwargs)
-        else:
-            return Response({"message": "Service Code already in use."}, status=401)
+        
         
 class SavedServiceDetailsView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -85,9 +79,14 @@ class ServicesView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ServicesSerializer
+
+
     
     def get_queryset(self):
         return Services.objects.filter(AppID__UserID=self.request.user)
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
 
 class TechniciansView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]

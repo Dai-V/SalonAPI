@@ -20,7 +20,13 @@ class SavedServicesSerializer(serializers.ModelSerializer):
         default = serializers.CurrentUserDefault()
     )
 
- 
+    def validate_ServiceCode(self,value):
+        if (SavedServices.objects.filter(UserID=self.context.get('request').user.id, ServiceCode=value).exists()):
+            raise serializers.ValidationError('This service code already in use')
+        else: 
+            return value
+         
+
 
     def getSavedServicesByUser(User):
         saved_services = SavedServices.objects.filter(UserID=User)
@@ -31,15 +37,15 @@ class SavedServicesSerializer(serializers.ModelSerializer):
 
 class ServicesSerializer(serializers.ModelSerializer):
     
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     request = self.context.get('request')
-    #     if(request is not None):
-    #         self.fields['ServiceCode'] = serializers.ChoiceField(
-    #             choices=[       
-    #                 (choice) for choice in SavedServices.objects.filter(UserID=request.user.id).values_list('ServiceCode', flat=True)
-    #             ],
-    #         )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if(request is not None):
+            self.fields['ServiceCode'] = serializers.ChoiceField(
+                choices=[       
+                    (choice) for choice in SavedServices.objects.filter(UserID=request.user.id).values_list('ServiceCode', flat=True)
+                ],
+            )
            
     def getAll():
         return Services.objects.all()
