@@ -46,7 +46,9 @@ class ServicesSerializer(serializers.ModelSerializer):
                     (choice) for choice in SavedServices.objects.filter(UserID=request.user.id).values_list('ServiceCode', flat=True)
                 ],
             )
-           
+    
+
+    
     def getAll():
         return Services.objects.all()
 
@@ -86,7 +88,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
     def updateAppTotal(AppID):
         App = Appointments.objects.get(AppID=AppID)
-        App.AppTotal = Services.objects.filter(AppID=App).aggregate(Sum('ServicePrice'))['ServicePrice__sum']
+        AppTotal =  Services.objects.filter(AppID=App).aggregate(Sum('ServicePrice'))['ServicePrice__sum']
+        if (AppTotal is not None):
+            App.AppTotal = AppTotal
+        else: App.AppTotal = 0
         App.save()
         return App 
     
@@ -104,7 +109,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
   
     class Meta:
         model = Appointments
-        fields = ['AppID', 'AppDate', 'AppStatus','AppTotal', 'PaymentType','UserID','Services','CustomerID']
+        fields = ['AppID', 'AppDate', 'AppStatus','AppTotal','AppComment', 'PaymentType','UserID','Services','CustomerID']
 
 class TechniciansSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(

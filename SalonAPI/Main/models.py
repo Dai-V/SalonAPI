@@ -10,6 +10,7 @@ class Appointments(models.Model):
     AppDate = models.DateField(default=django.utils.timezone.now)
     AppStatus = models.CharField(max_length=20,blank=True, null=True)
     AppTotal = models.DecimalField(max_digits=10, decimal_places=2,default=0)
+    AppComment = models.CharField(max_length = 50, blank = True, null=True)
     PaymentType = models.CharField(max_length=20,blank=True, null=True)  # e.g., 'credit_card', 'cash'
     UserID = models.ForeignKey('User', on_delete=models.CASCADE, related_name='Appointments')
     CustomerID = models.ForeignKey('Customer', on_delete=models.CASCADE, related_name='Appointments')

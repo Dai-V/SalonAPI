@@ -87,6 +87,33 @@ class ServicesView(generics.ListCreateAPIView):
     
     def get_serializer_context(self):
         return {"request": self.request}
+    
+    def perform_create(self, serializer):
+        serializer.save()
+        AppointmentSerializer.updateAppTotal(serializer.validated_data['AppID'].AppID)
+
+
+class ServiceDetailsView(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ServicesSerializer
+
+
+    
+    def get_queryset(self):
+        return Services.objects.filter(AppID__UserID=self.request.user)
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+    def perform_update(self, serializer):
+        serializer.save()
+        AppointmentSerializer.updateAppTotal(serializer.validated_data['AppID'].AppID)
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        AppointmentSerializer.updateAppTotal(instance.AppID.AppID)
+        
 
 class TechniciansView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
