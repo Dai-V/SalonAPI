@@ -71,26 +71,18 @@ class CustomerSlugRelatedField(serializers.SlugRelatedField):
          )
     
 class AppointmentSerializer(serializers.ModelSerializer):
-    UserID = serializers.PrimaryKeyRelatedField(
-        default=serializers.CurrentUserDefault()
-        , read_only = True
+    UserID = serializers.HiddenField(
+        default = serializers.CurrentUserDefault()
     )
-    AppStatus = serializers.CharField(default='Open')
+    AppStatus = serializers.ReadOnlyField(default='Open')
     AppTotal = serializers.ReadOnlyField(
         default=0)
-    PaymentType = serializers.CharField(default='Card')
+    PaymentType = serializers.ReadOnlyField(default='')
     Services = ServicesSerializer(many=True, read_only=True)
     CustomerID = CustomerSlugRelatedField(
         slug_field = "CustomerFirstName"
     )
 
-
-
-    # def get_CustomerID(self,obj):
-    #     print (self.context.get('request').user.id)
-        
-    #     queryset = Customer.objects.filter(UserID = self.context.get('request').user.id)
-    #     return CustomerSerializer(queryset, context = {'request': self.context.get('request')}).data
 
 
 
