@@ -5,23 +5,6 @@ from SalonAPI.Main.models import Appointments, Customer,SavedServices, Services,
 
 
 
-
-class SavedServicesSerializer(serializers.ModelSerializer):
-    UserID = serializers.PrimaryKeyRelatedField(
-        default=serializers.CurrentUserDefault()
-        , read_only = True
-    )
-
-    def getSavedServicesByUser(User):
-        saved_services = SavedServices.objects.filter(UserID=User)
-        return saved_services
-    class Meta:
-        model = SavedServices
-        fields = '__all__'
-        read_only_fields = ['UserID']
-
-
-
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
@@ -32,6 +15,24 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'password','email', 'UserPhone', 'UserAddress','UserSalonName', 'UserInfo']
+class SavedServicesSerializer(serializers.ModelSerializer):
+    UserID = serializers.HiddenField(
+        default = serializers.CurrentUserDefault()
+    )
+    ServiceCode = serializers.CharField()
+
+ 
+
+    def getSavedServicesByUser(User):
+        saved_services = SavedServices.objects.filter(UserID=User)
+        return saved_services
+    class Meta:
+        model = SavedServices
+        fields = '__all__'
+
+
+
+
 
 
 

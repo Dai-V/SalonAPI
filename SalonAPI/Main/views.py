@@ -72,8 +72,12 @@ class SavedServicesView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SavedServicesSerializer
+
     def get_queryset(self):
         return SavedServices.objects.filter(UserID=self.request.user)
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
 
     # # Get all saved services, if none exist, create some default services
     # def get(self, request):    
@@ -87,16 +91,14 @@ class SavedServicesView(generics.ListCreateAPIView):
     
     # # Add a new saved service
     # # Ensure that the service name is unique
-    # def post(self, request):
-    #     if( request.user.is_authenticated):
-    #             serializer = SavedServicesSerializer(data=request.data, context={'request':request})
-    #             if serializer.is_valid():
-    #                 serializer.save()
-    #                 json = JSONRenderer().render(serializer.data)
-    #                 return Response(json, status=201)
-    #             return Response(serializer.errors, status=400)
-    #     else:
-    #         return Response({"message": "User not authenticated."}, status=401)
+    def post(self, request, *args, **kwargs):
+        print(request.data)
+        if (not SavedServices.objects.filter(UserID=request.user.id, ServiceCode=request.data['ServiceCode']).exists()):
+            return self.create(request, *args, **kwargs)
+        else:
+            return Response({"message": "Service Code already in use."}, status=401)
+        
+
     
 
 class SavedServiceDetailsView(generics.RetrieveUpdateDestroyAPIView):
@@ -170,7 +172,7 @@ class ServicesView(generics.ListCreateAPIView):
     serializer_class = ServicesSerializer
     
     def get_queryset(self):
-        return Services.objects.filter(UserID=self.request.user)
+        return Services.objects.filter(AppID__UserID=self.request.user)
     # def get(self, request):
     #      if (request.user.is_authenticated):    
     #         services = ServicesSerializer.getAll()
