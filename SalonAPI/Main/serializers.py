@@ -19,6 +19,7 @@ class SavedServicesSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
         default = serializers.CurrentUserDefault()
     )
+    ServiceDuration = serializers.IntegerField(min_value=0, default = 0)
 
     def validate_ServiceCode(self,value):
         if (SavedServices.objects.filter(UserID=self.context.get('request').user.id, ServiceCode=value).exists()):
@@ -36,7 +37,8 @@ class SavedServicesSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ServicesSerializer(serializers.ModelSerializer):
-    
+    ServiceDuration = serializers.IntegerField(min_value=0, default = 0)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request = self.context.get('request')

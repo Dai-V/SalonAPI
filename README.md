@@ -1,4 +1,5 @@
 Building the Backend for a Salon Management System
+
 Working Features:
 - Authentication: For salon managers only. (Right now it's session based. Hoping to move to JWT token soon for mobiles)
 
