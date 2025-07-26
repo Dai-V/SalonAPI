@@ -11,6 +11,18 @@ Working Features:
 
 - Appointment Management: Make appointsment that includes services. Each appointment is tied to a technician(s), and a customer.
 
+Planned Features: 
+- Scheduling management for technicians
+
+- Automated SMS/email reminder for appointments
+
+- Product tracking, and alerts for low stock
+
+- Mutiple Users (Managers) for a single salon.
+
+- Scheduling standing appointments
+
+
 In-progress Features:
 - Looking at data validation
 

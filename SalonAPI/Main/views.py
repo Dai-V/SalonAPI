@@ -9,6 +9,7 @@ from SalonAPI.Main.serializers import AppointmentSerializer, CustomerSerializer,
 from django.contrib.auth import authenticate, login,logout
 import requests
 
+# Rule of thumb: If it requires UserID, then authenticated users only!
 class AppointmentsView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -90,7 +91,7 @@ class LoginView(APIView):
 class LogoutView(APIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def post(self, request):
         logout(request)
         return Response({'message': "Logout successful"})
@@ -172,23 +173,32 @@ class TechnicianDetailsView(generics.RetrieveUpdateAPIView):
     def get_serializer_context(self):
         return {"request": self.request}
 
-class TotalsView(generics.GenericAPIView):
+class TotalsView(APIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-
+    
     def get(self, request):
-            total_appointments = AppointmentSerializer.getAllByUser(request.user).count()
-            total_services = ServicesSerializer.getAll().count()
+            # Format is  /api/totals/?StartDate=1997-09-26&EndDate=2025-07-25
+            StartDate = request.query_params.get('StartDate', None)
+            EndDate = request.query_params.get('EndDate', None)
+            if (StartDate is None):
+                StartDate = date.today()
+            if (EndDate is None):
+                EndDate = date.today()
+            if StartDate > EndDate:
+                return Response(({'message': "Start date can't be later than End Date"}), status=404)
+            total_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).count()
+            total_services = ServicesSerializer.getAll().filter(AppID__AppDate__range=(StartDate,EndDate)).count()
             total_technicians = TechniciansSerializer.getAllByUser(request.user).count()
             total_earnings = sum(
-                appointment.AppTotal for appointment in AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed')
+                appointment.AppTotal for appointment in AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate))
             )
-            total_closed_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed').count()
-            total_venmo_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Venmo').count()
-            total_cash_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Vash').count()
-            total_credit_card_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Card').count()
-            total_customers = CustomerSerializer.getAll(request.user).count()
-            total_open_appointments_today = AppointmentSerializer.getAllByUser(request.user).filter(AppDate=date.today()).exclude(AppStatus='Closed').count()
+            total_closed_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate)).count()
+            total_venmo_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Venmo', AppDate__range=(StartDate,EndDate)).count()
+            total_cash_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Cash', AppDate__range=(StartDate,EndDate)).count()
+            total_credit_card_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Card', AppDate__range=(StartDate,EndDate)).count()
+            total_customers = CustomerSerializer.getAll(request.user).filter(Appointments__AppDate__range=(StartDate,EndDate)).count()
+            total_open_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).exclude(AppStatus='Closed').count()
             json = JSONRenderer().render({
                 "total_appointments": total_appointments,
                 "total_services": total_services,
@@ -199,7 +209,9 @@ class TotalsView(generics.GenericAPIView):
                 "total_venmo_appointments": total_venmo_appointments,   
                 "total_cash_appointments": total_cash_appointments,
                 "total_credit_card_appointments": total_credit_card_appointments,
-                "total_open_appointments_today":total_open_appointments_today,
+                "total_open_appointments":total_open_appointments,
 
             })
             return Response(json)
+    
+

@@ -27,7 +27,8 @@ urlpatterns = [
     path('api/savedservices/<int:pk>/', views.SavedServiceDetailsView.as_view(), name='saved_service_details'),
     path('api/services/', views.ServicesView.as_view(), name='services'),
     path('api/services/<int:pk>/', views.ServiceDetailsView.as_view(), name='service_details'),
-    path('', views.TotalsView.as_view(), name='totals'),
+    path('api/totals/', views.TotalsView.as_view(), name='totals'),
+
     path('api/users/',views.UserView.as_view(), name='users'),
     path('api/technicians/', views.TechniciansView.as_view(), name='technicians'),
     path('api/technicians/<int:pk>', views.TechnicianDetailsView.as_view(), name='technician_details'),

@@ -64,6 +64,7 @@ class Services(models.Model):
 
 
 
+
 class AuthGroup(models.Model):
     name = models.CharField(unique=True, max_length=150)
 
