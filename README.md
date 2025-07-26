@@ -11,6 +11,8 @@ Working Features:
 
 - Appointment Management: Make appointsment that includes services. Each appointment is tied to a technician(s), and a customer.
 
+- Totals: Various totals filtered by start and end date (End of day totals, end of month totals, etc...).   
+
 Planned Features: 
 - Scheduling management for technicians
 

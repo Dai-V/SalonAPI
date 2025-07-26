@@ -46,13 +46,15 @@ class SavedServiceDetailsView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SavedServicesSerializer
+
     def get_queryset(self):
         return SavedServices.objects.filter(UserID=self.request.user)
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
 
 class UserView(APIView):
-
     serializer_class = UserSerializer
-
 
     def get(self, request):
         serializer = UserSerializer(request.user)
@@ -179,6 +181,7 @@ class TotalsView(APIView):
     
     def get(self, request):
             # Format is  /api/totals/?StartDate=1997-09-26&EndDate=2025-07-25
+
             StartDate = request.query_params.get('StartDate', None)
             EndDate = request.query_params.get('EndDate', None)
             if (StartDate is None):
@@ -187,6 +190,12 @@ class TotalsView(APIView):
                 EndDate = date.today()
             if StartDate > EndDate:
                 return Response(({'message': "Start date can't be later than End Date"}), status=404)
+            
+            return Response(totals(request,StartDate,EndDate))
+    
+# Below here is a list of non-view methods for reuse 
+# List of totals
+def totals(request, StartDate, EndDate):
             total_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).count()
             total_services = ServicesSerializer.getAll().filter(AppID__AppDate__range=(StartDate,EndDate)).count()
             total_technicians = TechniciansSerializer.getAllByUser(request.user).count()
@@ -212,6 +221,6 @@ class TotalsView(APIView):
                 "total_open_appointments":total_open_appointments,
 
             })
-            return Response(json)
+            return json
     
 
