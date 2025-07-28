@@ -14,7 +14,6 @@ Working Features:
 - Totals: Various totals filtered by start and end date (End of day totals, end of month totals, etc...).   
 
 Planned Features: 
-- Scheduling management for technicians
 
 - Automated SMS/email reminder for appointments
 
@@ -26,7 +25,7 @@ Planned Features:
 
 
 In-progress Features:
-- Looking at data validation
+- Scheduling management for technicians. Need to validate schedules when making appointments
 
 
 
