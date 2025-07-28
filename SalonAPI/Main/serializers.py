@@ -53,6 +53,14 @@ class ServicesSerializer(serializers.ModelSerializer):
             )
     
 
+    def validate_TechID(self,value):
+        # Check if the newest schedule of the technician that overlaps with AppDate is available.
+        AppDate = Appointments.objects.filter(AppID = self.initial_data['AppID']).values('AppDate')
+        Availability = Schedules.objects.filter(TechID=value,To__gte=AppDate,From__lte=AppDate).values_list('Availability',flat=True).order_by('-Created_At').first()
+        if not Availability: # Also includes those without a schedule set
+            raise serializers.ValidationError('This techinician is not on the schedule that day')
+        else:
+            return value
     
     def getAll():
         return Services.objects.all()
