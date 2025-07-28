@@ -1,31 +1,39 @@
-Building the Backend for a Salon Management System
+Backend Development for Salon Management System
 
 Working Features:
-- Authentication: For salon managers only. (Right now it's session based. Hoping to move to JWT token soon for mobiles)
 
-- Customer Management: Track service history, add notes/comments, and store basic customer information.
+Authentication:
+Session-based login for salon managers. (JWT implementation planned for mobile support.)
 
-- Technician Management: Maintain service records and notes/comments for each salon technician.
+Customer Management:
+Store basic customer details, service history, and internal notes. Each customer is associated with a specific salon.
 
-- Service Management: Save default services with configurable durations and prices; allow customization of services per appointment. 
+Technician Management:
+Track service records and notes for each salon technician. Includes technician scheduling. Each technician is tied to a salon.
 
-- Appointment Management: Make appointsment that includes services. Each appointment is tied to a technician(s), and a customer.
+Service Management:
+Maintain a list of default services with customizable durations and pricing. Services can be tailored per appointment. Each service is associated with a technician.
 
-- Totals: Various totals filtered by start and end date (End of day totals, end of month totals, etc...).   
+Appointment Management:
+Create appointments composed of one or more services. Each appointment is linked to a salon and a customer.
 
-Planned Features: 
+Reporting & Totals:
+Generate totals based on date filters (e.g., daily, monthly revenue summaries, etc.).
 
-- Automated SMS/email reminder for appointments
+Planned Features:
 
-- Product tracking, and alerts for low stock
+Automated SMS/email reminders for upcoming appointments.
 
-- Mutiple Users (Managers) for a single salon.
+Product inventory tracking with low stock alerts.
 
-- Scheduling standing appointments
+Support for multiple manager accounts per salon.
+
+Support for recurring ("standing") appointments.
+
 
 
 In-progress Features:
-- Scheduling management for technicians. Need to validate schedules when making appointments
+
 
 
 

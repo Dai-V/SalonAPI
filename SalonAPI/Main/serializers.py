@@ -82,10 +82,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
         default = serializers.CurrentUserDefault()
     )
-    AppStatus = serializers.ReadOnlyField(default='Open')
+    AppStatus = serializers.CharField(default='Open')
     AppTotal = serializers.ReadOnlyField(
         default=0)
-    PaymentType = serializers.ReadOnlyField(default='')
+    PaymentType = serializers.CharField(default='')
     Services = ServicesSerializer(many=True, read_only=True)
     CustomerID = CustomerSlugRelatedField(
         slug_field = "CustomerFirstName"
