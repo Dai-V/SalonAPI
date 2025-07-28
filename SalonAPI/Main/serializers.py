@@ -1,7 +1,8 @@
+import django
 from rest_framework import serializers
 from django.db.models import Sum
 
-from SalonAPI.Main.models import Appointments, Customer,SavedServices, Services, Technicians, User
+from SalonAPI.Main.models import Appointments, Customer,SavedServices, Schedules, Services, Technicians, User
 
 
 
@@ -121,12 +122,22 @@ class TechniciansSerializer(serializers.ModelSerializer):
     )
     Services = ServicesSerializer(many=True, read_only=True)
 
+    def create(self,obj):
+        
+        return super().create(self,obj)
+
     def getAllByUser(User):
         return Technicians.objects.filter(UserID=User)
     
     class Meta:
         model = Technicians
-        fields = ['TechID', 'TechName', 'TechEmail', 'TechPhone', 'TechSpecialization', 'TechAvailability', 'TechInfo', 'Services', 'UserID']
+        fields = ['TechID', 'TechName', 'TechEmail', 'TechPhone', 'TechInfo', 'Services', 'UserID']
+
+class SchedulesSerializer(serializers.ModelSerializer):
+    Created_At = serializers.ReadOnlyField()
+    class Meta:
+        model = Schedules
+        fields = ['ScheduleID','From','To','Availability','Created_At', 'TechID']
 
 
 class CustomerSerializer(serializers.ModelSerializer):

@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions,generics
 from rest_framework.renderers import JSONRenderer
-from SalonAPI.Main.models import Appointments, Customer, SavedServices, Services, Technicians, User
-from SalonAPI.Main.serializers import AppointmentSerializer, CustomerSerializer, SavedServicesSerializer, ServicesSerializer, TechniciansSerializer, UserSerializer
+from SalonAPI.Main.models import Appointments, Customer, SavedServices, Schedules, Services, Technicians, User
+from SalonAPI.Main.serializers import AppointmentSerializer, CustomerSerializer, SavedServicesSerializer, SchedulesSerializer, ServicesSerializer, TechniciansSerializer, UserSerializer
 from django.contrib.auth import authenticate, login,logout
 import requests
 
@@ -171,6 +171,17 @@ class TechnicianDetailsView(generics.RetrieveUpdateAPIView):
    
     def get_queryset(self):
         return Technicians.objects.filter(UserID=self.request.user)
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+class SchedulesView(generics.ListCreateAPIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SchedulesSerializer 
+   
+    def get_queryset(self):
+        return Schedules.objects.filter(TechID__UserID=self.request.user)
     
     def get_serializer_context(self):
         return {"request": self.request}

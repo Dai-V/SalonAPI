@@ -48,7 +48,6 @@ class Technicians (models.Model):
     TechEmail = models.EmailField(unique=True)
     TechPhone = models.CharField(max_length=15, unique=True)
     TechSpecialization = models.CharField(max_length=100, blank=True, null=True)  # e.g., 'hair', 'nails'
-    TechAvailability = models.BooleanField(default=True)  # True if available, False if not
     TechInfo = models.TextField(blank=True, null=True)  # Additional information about the technician
     UserID = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Technicians')
 
@@ -62,6 +61,13 @@ class Services(models.Model):
     AppID = models.ForeignKey(Appointments, on_delete=models.CASCADE, related_name='Services')
     TechID = models.ForeignKey(Technicians, on_delete=models.CASCADE,related_name='Services') 
 
+class Schedules(models.Model):
+    ScheduleID = models.AutoField(primary_key=True)
+    From = models.DateField(blank = False, null = False)
+    To = models.DateField(blank = False, null = False)
+    Created_At = models.DateTimeField(blank = False, null = False, default = django.utils.timezone.now ) # Newer schedule will override older ones only where they overlap. 
+    Availability = models.BooleanField(blank = False, null = False) # True = Available, False = Not Available
+    TechID = models.ForeignKey(Technicians, on_delete=models.CASCADE,related_name='Schedules') 
 
 
 

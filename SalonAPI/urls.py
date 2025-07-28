@@ -36,6 +36,8 @@ urlpatterns = [
     path('api/customers/', views.CustomerView.as_view(), name='customers'),
     path('api/customers/<int:pk>/', views.CustomerDetailsView.as_view(), name='customer_details'),
     path('api/login', views.LoginView.as_view(), name='login'),
-    path('api/logout', views.LogoutView.as_view(), name='logout')
+    path('api/logout', views.LogoutView.as_view(), name='logout'),
+    path('api/schedules', views.SchedulesView.as_view(),name='schedule'),
+    
 
 ]
