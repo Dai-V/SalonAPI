@@ -3,7 +3,8 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions,generics
-from rest_framework.renderers import JSONRenderer
+from rest_framework.renderers import JSONRenderer,BrowsableAPIRenderer,TemplateHTMLRenderer, StaticHTMLRenderer
+from django.db.models import Sum, Count, Q
 from SalonAPI.Main.models import Appointments, Customer, SavedServices, Schedules, Services, Supplies, Technicians, User
 from SalonAPI.Main.serializers import AppointmentSerializer, CustomerSerializer, SavedServicesSerializer, SchedulesSerializer, ServicesSerializer, SuppliesSerializer, TechniciansSerializer, UserSerializer
 from django.contrib.auth import authenticate, login,logout
@@ -236,6 +237,7 @@ def totals(request, StartDate, EndDate):
                 appointment.AppTotal for appointment in AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate))
             )
             total_closed_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate)).count()
+            total_closed_services = ServicesSerializer.getAll().filter(Q(AppID__AppDate__range=(StartDate,EndDate)) & Q(AppID__AppStatus='Closed')).count()
             total_venmo_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Venmo', AppDate__range=(StartDate,EndDate)).count()
             total_cash_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Cash', AppDate__range=(StartDate,EndDate)).count()
             total_credit_card_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Card', AppDate__range=(StartDate,EndDate)).count()
@@ -243,12 +245,15 @@ def totals(request, StartDate, EndDate):
             total_open_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).exclude(AppStatus='Closed').count()
             total_technicians_services = TechniciansSerializer.ServicesDoneByTechnicians(request.user,StartDate,EndDate)
             json = JSONRenderer().render({
+                "From" : StartDate,
+                "To":EndDate,
                 "total_appointments": total_appointments,
                 "total_services": total_services,
                 "total_technicians": total_technicians,
                 "total_customers": total_customers,
                 "total_earnings": total_earnings,
                 "total_closed_appointments": total_closed_appointments,
+                "total_closed_services":total_closed_services,
                 "total_venmo_appointments": total_venmo_appointments,   
                 "total_cash_appointments": total_cash_appointments,
                 "total_credit_card_appointments": total_credit_card_appointments,

@@ -141,7 +141,7 @@ class TechniciansSerializer(serializers.ModelSerializer):
     
     def ServicesDoneByTechnicians(User, StartDate,EndDate):
         # For every technician, show the total amount of services and payment of those services between Start Date and End Date
-        query = Technicians.objects.filter(UserID=User).select_related('Technicians','Appointments','Services').values('TechName').annotate(total_services=Count('Services', filter = Q(Services__AppID__AppDate__range=(StartDate,EndDate))), total_payment=Sum('Services__ServicePrice', filter = Q(Services__AppID__AppDate__range=(StartDate,EndDate)))).order_by('TechName')
+        query = Technicians.objects.filter(UserID=User).select_related('Technicians','Appointments','Services').values('TechName').annotate(total_services=Count('Services', filter = Q(Services__AppID__AppDate__range=(StartDate,EndDate)) & Q(Services__AppID__AppStatus='Closed')), total_payment=Sum('Services__ServicePrice', filter = Q(Services__AppID__AppDate__range=(StartDate,EndDate)) & Q(Services__AppID__AppStatus='Closed'))).order_by('TechName')
         # Show 0 instead of Null
         for tech in query:
             if (tech['total_payment'] is None):
