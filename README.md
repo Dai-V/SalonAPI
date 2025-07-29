@@ -12,13 +12,15 @@ Working Features:
 
 - Appointment Management: Create appointments composed of one or more services. Each appointment is linked to a salon and a customer.
 
+- Supply Management: Keep track of supply inventory
+
 - Reporting & Totals: Generate totals based on date filters (e.g., daily, monthly revenue summaries, etc.).
 
 Planned Features:
 
 - Automated SMS/email reminders for upcoming appointments.
 
-- Product inventory tracking with low stock alerts.
+- Low stock alerts/warnings for supplies.
 
 - Support for multiple manager accounts per salon.
 
@@ -27,7 +29,7 @@ Planned Features:
 
 In-progress Features:
 
-
+- Comprehensive dashboard
 
 
 
