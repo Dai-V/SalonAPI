@@ -1,6 +1,8 @@
+from itertools import count
+from queue import Full
 import django
 from rest_framework import serializers
-from django.db.models import Sum
+from django.db.models import Sum, Count, Q
 
 from SalonAPI.Main.models import Appointments, Customer,SavedServices, Schedules, Services, Supplies, Technicians, User
 
@@ -134,9 +136,19 @@ class TechniciansSerializer(serializers.ModelSerializer):
         
         return super().create(self,obj)
 
-    def getAllByUser(User):
+    def getAllByUser(User): 
         return Technicians.objects.filter(UserID=User)
     
+    def ServicesDoneByTechnicians(User, StartDate,EndDate):
+        # For every technician, show the total amount of services and payment of those services between Start Date and End Date
+        query = Technicians.objects.filter(UserID=User).select_related('Technicians','Appointments','Services').values('TechName').annotate(total_services=Count('Services', filter = Q(Services__AppID__AppDate__range=(StartDate,EndDate))), total_payment=Sum('Services__ServicePrice', filter = Q(Services__AppID__AppDate__range=(StartDate,EndDate)))).order_by('TechName')
+        # Show 0 instead of Null
+        for tech in query:
+            if (tech['total_payment'] is None):
+                tech['total_payment'] = 0
+
+        return query
+            
     class Meta:
         model = Technicians
         fields = ['TechID', 'TechName', 'TechEmail', 'TechPhone', 'TechInfo', 'Services', 'UserID']

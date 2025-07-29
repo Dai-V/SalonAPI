@@ -14,7 +14,7 @@ Working Features:
 
 - Supply Management: Keep track of supply inventory
 
-- Reporting & Totals: Generate totals based on date filters (e.g., daily, monthly revenue summaries, etc.).
+- Reporting & Totals: Generate totals based on date filters (e.g., daily, monthly revenue summaries, etc.). Also show how much each individual made within a date range.
 
 Planned Features:
 
@@ -30,6 +30,8 @@ Planned Features:
 In-progress Features:
 
 - Comprehensive dashboard
+
+
 
 
 

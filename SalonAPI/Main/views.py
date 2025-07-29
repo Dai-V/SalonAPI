@@ -241,6 +241,7 @@ def totals(request, StartDate, EndDate):
             total_credit_card_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Card', AppDate__range=(StartDate,EndDate)).count()
             total_customers = CustomerSerializer.getAll(request.user).filter(Appointments__AppDate__range=(StartDate,EndDate)).count()
             total_open_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).exclude(AppStatus='Closed').count()
+            total_technicians_services = TechniciansSerializer.ServicesDoneByTechnicians(request.user,StartDate,EndDate)
             json = JSONRenderer().render({
                 "total_appointments": total_appointments,
                 "total_services": total_services,
@@ -252,6 +253,7 @@ def totals(request, StartDate, EndDate):
                 "total_cash_appointments": total_cash_appointments,
                 "total_credit_card_appointments": total_credit_card_appointments,
                 "total_open_appointments":total_open_appointments,
+                "total_technicians_services":total_technicians_services,
 
             })
             return json
