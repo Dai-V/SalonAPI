@@ -2,7 +2,7 @@ import django
 from rest_framework import serializers
 from django.db.models import Sum
 
-from SalonAPI.Main.models import Appointments, Customer,SavedServices, Schedules, Services, Technicians, User
+from SalonAPI.Main.models import Appointments, Customer,SavedServices, Schedules, Services, Supplies, Technicians, User
 
 
 
@@ -177,3 +177,14 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ['CustomerID', 'CustomerFirstName', 'CustomerLastName', 'CustomerEmail', 'CustomerPhone', 'CustomerAddress', 'CustomerInfo', 'UserID','Appointments']
+
+
+class SuppliesSerializer(serializers.ModelSerializer):
+    UserID = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+    Created_At = serializers.ReadOnlyField()
+    Last_Modified = serializers.ReadOnlyField()
+    class Meta:
+        model = Supplies
+        fields = ['SupplyID','SupplyName','Created_At','Last_Modified','Quantity','Cost','UserID']

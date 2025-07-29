@@ -28,7 +28,6 @@ urlpatterns = [
     path('api/services/', views.ServicesView.as_view(), name='services'),
     path('api/services/<int:pk>/', views.ServiceDetailsView.as_view(), name='service_details'),
     path('api/totals/', views.TotalsView.as_view(), name='totals'),
-    
     path('api/users/',views.UserView.as_view(), name='users'),
     path('api/technicians/', views.TechniciansView.as_view(), name='technicians'),
     path('api/technicians/<int:pk>', views.TechnicianDetailsView.as_view(), name='technician_details'),
@@ -38,6 +37,8 @@ urlpatterns = [
     path('api/login', views.LoginView.as_view(), name='login'),
     path('api/logout', views.LogoutView.as_view(), name='logout'),
     path('api/schedules', views.SchedulesView.as_view(),name='schedule'),
+    path('api/supplies/', views.SuppliesView.as_view(), name='supplies'),
+    path('api/supplies/<int:pk>', views.SupplyDetailsView.as_view(), name='supply_details'),
     
 
 ]

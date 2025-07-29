@@ -69,6 +69,15 @@ class Schedules(models.Model):
     Availability = models.BooleanField(blank = False, null = False) # True = Available, False = Not Available
     TechID = models.ForeignKey(Technicians, on_delete=models.CASCADE,related_name='Schedules') 
 
+class Supplies(models.Model):
+    SupplyID = models.AutoField(primary_key=True)
+    SupplyName = models.CharField(blank = False, null = False, default = "Unnamed Supply")
+    Created_At = models.DateTimeField(blank = False, null = False, default = django.utils.timezone.now )
+    Last_Modified = models.DateTimeField(blank = False, null = False, default = django.utils.timezone.now )
+    Quantity = models.IntegerField(blank = False, null = False, default = 0)
+    Cost = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
+    UserID =  UserID = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Supplies')
+
 
 
 class AuthGroup(models.Model):
