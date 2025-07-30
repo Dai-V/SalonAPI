@@ -43,6 +43,7 @@ class SavedServicesSerializer(serializers.ModelSerializer):
 
 class ServicesSerializer(serializers.ModelSerializer):
     ServiceDuration = serializers.IntegerField(min_value=0, default = 0)
+    AppID = serializers.PrimaryKeyRelatedField(read_only=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -55,21 +56,21 @@ class ServicesSerializer(serializers.ModelSerializer):
             )
     
 
-    def validate_TechID(self,value):
-        # Check if the newest schedule of the technician that overlaps with AppDate is available.
-        AppDate = Appointments.objects.filter(AppID = self.initial_data['AppID']).values('AppDate')
-        Availability = Schedules.objects.filter(TechID=value,To__gte=AppDate,From__lte=AppDate).values_list('Availability',flat=True).order_by('-Created_At').first()
-        if not Availability: # Also includes those without a schedule set
-            raise serializers.ValidationError('This techinician is not on the schedule that day')
-        else:
-            return value
+    # def validate_TechID(self,value):
+    #     # Check if the newest schedule of the technician that overlaps with AppDate is available.
+    #     AppDate = Appointments.objects.filter(AppID = self.initial_data['AppID']).values('AppDate')
+    #     Availability = Schedules.objects.filter(TechID=value,To__gte=AppDate,From__lte=AppDate).values_list('Availability',flat=True).order_by('-Created_At').first()
+    #     if not Availability: # Also includes those without a schedule set
+    #         raise serializers.ValidationError('This techinician is not on the schedule that day')
+    #     else:
+    #         return value
     
     def getAll():
         return Services.objects.all()
 
     class Meta:
         model = Services
-        fields = ['ServiceName', 'ServiceCode', 'ServiceDescription', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration', 'AppID', 'TechID']
+        fields = ['ServiceName', 'ServiceCode', 'ServiceDescription', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration',  'TechID','AppID']
         
         
 # Get List of customers that is of the current user
@@ -88,10 +89,28 @@ class AppointmentSerializer(serializers.ModelSerializer):
     AppTotal = serializers.ReadOnlyField(
         default=0)
     PaymentType = serializers.CharField(default='')
-    Services = ServicesSerializer(many=True, read_only=True)
+    Services = ServicesSerializer(many=True)
     CustomerID = CustomerSlugRelatedField(
         slug_field = "CustomerFirstName"
     )
+
+    # To create appointment and services that are included at the same time
+    def create(self, validated_data):
+        services = validated_data.pop('Services')
+        appointment = Appointments.objects.create(**validated_data)
+        print (appointment)
+        for service in services:
+            Services.objects.create(AppID=appointment,**service)
+        return appointment
+    
+    def update(self, instance, validated_data):
+        services = validated_data.pop('Services')
+        instance.save()
+        # Since Services doesn't have a unique identifier, we delete all services in the app and just create new ones. Might cause troubles in the future but we'll see
+        Services.objects.filter(AppID=instance).delete()
+        for service in services:
+            Services.objects.create(AppID=instance,**service)
+        return instance   
 
     def getAllByUser(User):
         appointments = Appointments.objects.filter(UserID=User).order_by('-AppDate')
