@@ -1,12 +1,6 @@
-from itertools import count
-from queue import Full
-import django
 from rest_framework import serializers
 from django.db.models import Sum, Count, Q
-
 from SalonAPI.Main.models import Appointments, Customer,SavedServices, Schedules, Services, Supplies, Technicians, User
-
-
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
@@ -14,7 +8,6 @@ class UserSerializer(serializers.ModelSerializer):
         required=True,
         style={'input_type': 'password'}
     )
-
     class Meta:
         model = User
         fields = ['id', 'username', 'password','email', 'UserPhone', 'UserAddress','UserSalonName', 'UserInfo']
@@ -58,6 +51,7 @@ class ServicesSerializer(serializers.ModelSerializer):
 
     # def validate_TechID(self,value):
     #     # Check if the newest schedule of the technician that overlaps with AppDate is available.
+    #     print (self.initial_data)
     #     AppDate = Appointments.objects.filter(AppID = self.initial_data['AppID']).values('AppDate')
     #     Availability = Schedules.objects.filter(TechID=value,To__gte=AppDate,From__lte=AppDate).values_list('Availability',flat=True).order_by('-Created_At').first()
     #     if not Availability: # Also includes those without a schedule set
@@ -74,7 +68,7 @@ class ServicesSerializer(serializers.ModelSerializer):
         
         
 # Get List of customers that is of the current user
-class CustomerSlugRelatedField(serializers.SlugRelatedField):
+class CustomerPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
     def get_queryset(self):
         user = self.context['request'].user
         return Customer.objects.filter(
@@ -85,13 +79,17 @@ class AppointmentSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
         default = serializers.CurrentUserDefault()
     )
-    AppStatus = serializers.CharField(default='Open')
+    # Open (Created), Pending (Checked In), Closed (Paid), Voided, Cancelled
+    AppStatus = serializers.ChoiceField(default='Open',
+    choices=[
+        'Open', 'Closed', 'Voided', 'Cancelled', 'Pending'
+    ]
+    )
     AppTotal = serializers.ReadOnlyField(
         default=0)
     PaymentType = serializers.CharField(default='')
     Services = ServicesSerializer(many=True)
-    CustomerID = CustomerSlugRelatedField(
-        slug_field = "CustomerFirstName"
+    CustomerID = CustomerPrimaryKeyRelatedField( 
     )
 
     # To create appointment and services that are included at the same time
@@ -109,8 +107,18 @@ class AppointmentSerializer(serializers.ModelSerializer):
         # Since Services doesn't have a unique identifier, we delete all services in the app and just create new ones. Might cause troubles in the future but we'll see
         Services.objects.filter(AppID=instance).delete()
         for service in services:
-            Services.objects.create(AppID=instance,**service)
-        return AppointmentSerializer.updateAppTotal(instance.AppID)   
+                Services.objects.create(AppID=instance,**service)
+        return AppointmentSerializer.updateAppTotal(instance.AppID)
+
+    # Check if the newest schedule of the technician that overlaps with AppDate is available.
+    def validate(self,data):
+        for service in data['Services']:
+            Availability = Schedules.objects.filter(TechID=service['TechID'],To__gte=data['AppDate'],From__lte=data['AppDate']).values_list('Availability',flat=True).order_by('-Created_At').first()
+            if not Availability: # Also includes those without a schedule yet as unavailable
+                raise serializers.ValidationError('This techinician is not on the schedule that day')
+            else:
+                return data
+
 
     def getAllByUser(User):
         appointments = Appointments.objects.filter(UserID=User).order_by('-AppDate')

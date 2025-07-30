@@ -8,7 +8,7 @@ from django.contrib.auth.models import AbstractUser
 class Appointments(models.Model):
     AppID   = models.AutoField(primary_key=True)
     AppDate = models.DateField(default=django.utils.timezone.now)
-    AppStatus = models.CharField(max_length=20,blank=True, null=True)
+    AppStatus = models.CharField(max_length=20,blank=True, null=True) # "Open (Created), Pending (Checked In), Closed (Paid), Voided, Cancelled"
     AppTotal = models.DecimalField(max_digits=10, decimal_places=2,default=0)
     AppComment = models.CharField(max_length = 50, blank = True, null=True)
     PaymentType = models.CharField(max_length=20,blank=True, null=True)  # e.g., 'credit_card', 'cash'
