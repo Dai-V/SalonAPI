@@ -115,7 +115,7 @@ class CustomerDetailsView(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         return Customer.objects.filter(UserID=self.request.user)
     
-class ServicesView(generics.ListCreateAPIView):
+class ServicesView(generics.ListAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ServicesSerializer
@@ -128,9 +128,7 @@ class ServicesView(generics.ListCreateAPIView):
     def get_serializer_context(self):
         return {"request": self.request}
     
-    def perform_create(self, serializer):
-        serializer.save()
-        AppointmentSerializer.updateAppTotal(serializer.validated_data['AppID'].AppID)
+
 
 
 class ServiceDetailsView(generics.RetrieveUpdateDestroyAPIView):

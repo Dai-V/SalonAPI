@@ -101,7 +101,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         print (appointment)
         for service in services:
             Services.objects.create(AppID=appointment,**service)
-        return appointment
+        return AppointmentSerializer.updateAppTotal(appointment.AppID)
     
     def update(self, instance, validated_data):
         services = validated_data.pop('Services')
@@ -110,7 +110,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         Services.objects.filter(AppID=instance).delete()
         for service in services:
             Services.objects.create(AppID=instance,**service)
-        return instance   
+        return AppointmentSerializer.updateAppTotal(instance.AppID)   
 
     def getAllByUser(User):
         appointments = Appointments.objects.filter(UserID=User).order_by('-AppDate')
