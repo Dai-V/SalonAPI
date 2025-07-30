@@ -1,12 +1,13 @@
 from datetime import date
-from django.shortcuts import render
+from django.forms import ValidationError
+from django.shortcuts import get_object_or_404, render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions,generics
 from rest_framework.renderers import JSONRenderer,BrowsableAPIRenderer,TemplateHTMLRenderer, StaticHTMLRenderer
 from django.db.models import Sum, Count, Q
 from SalonAPI.Main.models import Appointments, Customer, SavedServices, Schedules, Services, Supplies, Technicians, User
-from SalonAPI.Main.serializers import AppointmentSerializer, CustomerSerializer, SavedServicesSerializer, SchedulesSerializer, ServicesSerializer, SuppliesSerializer, TechniciansSerializer, UserSerializer
+from SalonAPI.Main.serializers import AppointmentSerializer, CreateUserSerializer, CustomerSerializer, LoginUserSerializer, SavedServicesSerializer, SchedulesSerializer, ServicesSerializer, SuppliesSerializer, TechniciansSerializer, UpdateUserSerializer, UserSerializer
 from django.contrib.auth import authenticate, login,logout
 import requests
 
@@ -54,25 +55,22 @@ class SavedServiceDetailsView(generics.RetrieveUpdateDestroyAPIView):
     def get_serializer_context(self):
         return {"request": self.request}
 
-class UserView(APIView):
-    serializer_class = UserSerializer
+# User profile view that allows an user to update their infos. Not for admin use
+class UserView(generics.RetrieveUpdateAPIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UpdateUserSerializer 
+    queryset = User.objects.all()
 
-    def get(self, request):
-        serializer = UserSerializer(request.user)
-        json = JSONRenderer().render(serializer.data)
-        return Response(json)
-    
-    def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            json = JSONRenderer().render(serializer.data)
-            return Response(json, status=201)
-        return Response(serializer.errors, status=400)
+    def get_object(self):
+        user = get_object_or_404(User, id=self.request.user.id)
+        return user
+
     
 class LoginView(APIView):
-
+    authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.AllowAny]
+    serializer_class = LoginUserSerializer
     def post(self, request, format=None):
         data = request.data
 
@@ -100,6 +98,20 @@ class LogoutView(APIView):
         return Response({'message': "Logout successful"})
         
 
+class SignupView(APIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.AllowAny]
+    serializer_class = CreateUserSerializer
+
+    def get(self,request):
+        return Response()
+    
+    def post(self,request):
+        serializer = CreateUserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer._errors, status=400)
     
 class CustomerView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]

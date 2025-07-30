@@ -2,7 +2,30 @@ from rest_framework import serializers
 from django.db.models import Sum, Count, Q
 from SalonAPI.Main.models import Appointments, Customer,SavedServices, Schedules, Services, Supplies, Technicians, User
 
-class UserSerializer(serializers.ModelSerializer):
+class CreateUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={'input_type': 'password'}
+    )
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email = validated_data['email'],
+            UserPhone = validated_data['UserPhone'],
+            UserAddress = validated_data['UserAddress'],
+            UserSalonName = validated_data['UserSalonName'],
+            UserInfo = validated_data['UserInfo'],
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'password','email', 'UserPhone', 'UserAddress','UserSalonName', 'UserInfo']
+
+class LoginUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
         required=True,
@@ -10,7 +33,23 @@ class UserSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = User
-        fields = ['id', 'username', 'password','email', 'UserPhone', 'UserAddress','UserSalonName', 'UserInfo']
+        fields = ['id', 'username', 'password']
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+    last_login = serializers.ReadOnlyField()
+    date_joined = serializers.ReadOnlyField()
+
+
+    class Meta:
+        model = User
+        exclude = ['password','groups','user_permissions','is_superuser','is_staff','is_active','UserInfo']
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        exclude = ['password']
+
 class SavedServicesSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
         default = serializers.CurrentUserDefault()

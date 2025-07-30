@@ -16,7 +16,6 @@ class Appointments(models.Model):
     CustomerID = models.ForeignKey('Customer', on_delete=models.CASCADE, related_name='Appointments')
 
 class User(AbstractUser):
-    UserEmail = models.EmailField(unique=True)
     UserPhone = models.CharField(max_length=15, unique=True)
     UserAddress = models.CharField(max_length=255, blank=True, null=True) 
     UserSalonName = models.CharField(max_length=100, blank=True, null=True)  # e.g., 'Salon XYZ'
