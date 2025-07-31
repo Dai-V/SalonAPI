@@ -39,11 +39,36 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     last_login = serializers.ReadOnlyField()
     date_joined = serializers.ReadOnlyField()
 
-
     class Meta:
         model = User
         exclude = ['password','groups','user_permissions','is_superuser','is_staff','is_active','UserInfo']
 
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    confirm_new_password = serializers.CharField(required=True)
+
+    def validate_old_password(self,value):
+        user = User.objects.get(id=self.context.get('request').user.id)
+        if (not user.check_password(value)):
+             raise serializers.ValidationError('Wrong password')
+        return value
+    
+    def validate(self,data):
+        if (data['confirm_new_password']!=data['new_password'] ):
+            raise serializers.ValidationError('Password confirmation does not match')
+        return data
+    
+    def save(self):
+        password = self.validated_data['new_password']
+        user = User.objects.get(id=self.context.get('request').user.id)
+        user.set_password(password)
+        user.save()
+        return user
+
+    class Meta:
+        model = User
+        fields = ['old_password','new_password','confirm_new_password']
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:

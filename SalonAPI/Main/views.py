@@ -7,7 +7,7 @@ from rest_framework import authentication, permissions,generics
 from rest_framework.renderers import JSONRenderer,BrowsableAPIRenderer,TemplateHTMLRenderer, StaticHTMLRenderer
 from django.db.models import Sum, Count, Q
 from SalonAPI.Main.models import Appointments, Customer, SavedServices, Schedules, Services, Supplies, Technicians, User
-from SalonAPI.Main.serializers import AppointmentSerializer, CreateUserSerializer, CustomerSerializer, LoginUserSerializer, SavedServicesSerializer, SchedulesSerializer, ServicesSerializer, SuppliesSerializer, TechniciansSerializer, UpdateUserSerializer, UserSerializer
+from SalonAPI.Main.serializers import AppointmentSerializer, ChangePasswordSerializer, CreateUserSerializer, CustomerSerializer, LoginUserSerializer, SavedServicesSerializer, SchedulesSerializer, ServicesSerializer, SuppliesSerializer, TechniciansSerializer, UpdateUserSerializer
 from django.contrib.auth import authenticate, login,logout
 import requests
 
@@ -112,7 +112,25 @@ class SignupView(APIView):
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer._errors, status=400)
+
+class ChangePasswordView(generics.UpdateAPIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChangePasswordSerializer
+    def get_object(self):
+            user = self.request.user
+            return user
     
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+    def update(self, request):
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"message":"Password change success! Log in with your new password"}, status=200)
+
+            return Response(serializer.errors, status=400)   
 class CustomerView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]

@@ -37,6 +37,7 @@ urlpatterns = [
     path('login', views.LoginView.as_view(), name='login'),
     path('logout', views.LogoutView.as_view(), name='logout'),
     path('signup', views.SignupView.as_view(), name='signup'),
+    path('change_password',views.ChangePasswordView.as_view(),name='change_password'),
     path('schedules', views.SchedulesView.as_view(),name='schedule'),
     path('supplies/', views.SuppliesView.as_view(), name='supplies'),
     path('supplies/<int:pk>', views.SupplyDetailsView.as_view(), name='supply_details'),
