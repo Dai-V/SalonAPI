@@ -145,6 +145,22 @@ class CustomerDetailsView(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         return Customer.objects.filter(UserID=self.request.user)
     
+class CustomerStandingAppointmentView(generics.ListAPIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AppointmentSerializer
+    def get_queryset(self, *args, **kwargs):
+        CustomerID = self.kwargs['pk']
+        return AppointmentSerializer.getStandingAppointments(self.request.user,CustomerID)
+    
+class CustomerAppointmentHistoryView(generics.ListAPIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AppointmentSerializer
+    def get_queryset(self, *args, **kwargs):
+        CustomerID = self.kwargs['pk']
+        return AppointmentSerializer.getAppointmentHistory(self.request.user,CustomerID)
+    
 class ServicesView(generics.ListAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]

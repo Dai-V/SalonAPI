@@ -174,9 +174,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
                 Services.objects.create(AppID=instance,**service)
         return AppointmentSerializer.updateAppTotal(instance.AppID)
 
-    # Check if the newest schedule of the technician that overlaps with AppDate is available.
+   
     def validate(self,data):
         for service in data['Services']:
+            # Check if the newest schedule of the technician that overlaps with AppDate is available.
             Availability = Schedules.objects.filter(TechID=service['TechID'],To__gte=data['AppDate'],From__lte=data['AppDate']).values_list('Availability',flat=True).order_by('-Created_At').first()
             if not Availability: # Also includes those without a schedule yet as unavailable
                 raise serializers.ValidationError('The techinician: ' + service['TechID'].TechName + ' is not on the schedule that day')
@@ -211,6 +212,13 @@ class AppointmentSerializer(serializers.ModelSerializer):
         else:
             return None
     
+    def getStandingAppointments(UserID, CustomerID):
+        app = Appointments.objects.filter(UserID = UserID,CustomerID=CustomerID, AppStatus="Open")
+        return app
+    
+    def getAppointmentHistory(UserID, CustomerID):
+        app = Appointments.objects.filter(UserID = UserID,CustomerID=CustomerID, AppStatus="Closed")
+        return app
   
     class Meta:
         model = Appointments
@@ -271,10 +279,6 @@ class CustomerSerializer(serializers.ModelSerializer):
         app = app.filter(AppStatus = "Closed")
         return app
     
-    def getStandingAppointments(CustomerID):
-        app = AppointmentSerializer.getAppByCustomer(CustomerID)
-        app = app.filter(AppStatus="Open")
-        return app
     
     class Meta:
         model = Customer

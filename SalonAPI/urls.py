@@ -34,6 +34,8 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path('customers/', views.CustomerView.as_view(), name='customers'),
     path('customers/<int:pk>/', views.CustomerDetailsView.as_view(), name='customer_details'),
+    path('customer/standing_appointments/<int:pk>/',views.CustomerStandingAppointmentView.as_view(),name='customer_standing_appointments'),
+    path('customer/appointment_history/<int:pk>/',views.CustomerAppointmentHistoryView.as_view(),name='customer_appointment_history'),
     path('login', views.LoginView.as_view(), name='login'),
     path('logout', views.LogoutView.as_view(), name='logout'),
     path('signup', views.SignupView.as_view(), name='signup'),
