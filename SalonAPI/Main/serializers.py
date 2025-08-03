@@ -179,9 +179,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
         for service in data['Services']:
             Availability = Schedules.objects.filter(TechID=service['TechID'],To__gte=data['AppDate'],From__lte=data['AppDate']).values_list('Availability',flat=True).order_by('-Created_At').first()
             if not Availability: # Also includes those without a schedule yet as unavailable
-                raise serializers.ValidationError('This techinician is not on the schedule that day')
-            else:
-                return data
+                raise serializers.ValidationError('The techinician: ' + service['TechID'].TechName + ' is not on the schedule that day')
+        return data
 
 
     def getAllByUser(User):
