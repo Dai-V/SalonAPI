@@ -201,24 +201,14 @@ class AppointmentSerializer(serializers.ModelSerializer):
         App.save()
         return App 
     
-    def getAppByCustomer(CustomerID):
-        App = Appointments.objects.filter(CustomerID=CustomerID)
-        return App
     
-    def getAppDetails(User,AppID):
-        if (Appointments.objects.filter(UserID=User, AppID=AppID).exists()):
-            app = Appointments.objects.filter(UserID=User, AppID=AppID)
-            return app
-        else:
-            return None
+    # def getStandingAppointments(UserID, CustomerID):
+    #     app = Appointments.objects.filter(UserID = UserID,CustomerID=CustomerID, AppStatus="Open")
+    #     return app
     
-    def getStandingAppointments(UserID, CustomerID):
-        app = Appointments.objects.filter(UserID = UserID,CustomerID=CustomerID, AppStatus="Open")
-        return app
-    
-    def getAppointmentHistory(UserID, CustomerID):
-        app = Appointments.objects.filter(UserID = UserID,CustomerID=CustomerID, AppStatus="Closed")
-        return app
+    # def getAppointmentHistory(UserID, CustomerID):
+    #     app = Appointments.objects.filter(UserID = UserID,CustomerID=CustomerID, AppStatus="Closed")
+    #     return app
   
     class Meta:
         model = Appointments

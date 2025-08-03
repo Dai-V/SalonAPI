@@ -31,6 +31,7 @@ urlpatterns = [
     path('profile/',views.UserView.as_view(), name='profile'),
     path('technicians/', views.TechniciansView.as_view(), name='technicians'),
     path('technicians/<int:pk>', views.TechnicianDetailsView.as_view(), name='technician_details'),
+    path('technicians/service_history/<int:pk>', views.TechnicianServiceHistoryView.as_view(), name='technician_service_history'),
     path('api-auth/', include('rest_framework.urls')),
     path('customers/', views.CustomerView.as_view(), name='customers'),
     path('customers/<int:pk>/', views.CustomerDetailsView.as_view(), name='customer_details'),

@@ -151,7 +151,7 @@ class CustomerStandingAppointmentView(generics.ListAPIView):
     serializer_class = AppointmentSerializer
     def get_queryset(self, *args, **kwargs):
         CustomerID = self.kwargs['pk']
-        return AppointmentSerializer.getStandingAppointments(self.request.user,CustomerID)
+        return Appointments.objects.filter(UserID = self.request.user,CustomerID=CustomerID, AppStatus="Open")
     
 class CustomerAppointmentHistoryView(generics.ListAPIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -159,7 +159,7 @@ class CustomerAppointmentHistoryView(generics.ListAPIView):
     serializer_class = AppointmentSerializer
     def get_queryset(self, *args, **kwargs):
         CustomerID = self.kwargs['pk']
-        return AppointmentSerializer.getAppointmentHistory(self.request.user,CustomerID)
+        return Appointments.objects.filter(UserID = self.request.user,CustomerID=CustomerID, AppStatus="Closed")
     
 class ServicesView(generics.ListAPIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -217,6 +217,15 @@ class TechnicianDetailsView(generics.RetrieveUpdateAPIView):
     
     def get_serializer_context(self):
         return {"request": self.request}
+    
+class TechnicianServiceHistoryView(generics.ListAPIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ServicesSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        TechID = self.kwargs['pk']
+        return Services.objects.filter(AppID__UserID=self.request.user,TechID=TechID,AppID__AppStatus="Closed")
     
 class SchedulesView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
