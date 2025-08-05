@@ -1,4 +1,5 @@
 from datetime import date
+import json
 from django.forms import ValidationError
 from django.shortcuts import get_object_or_404, render
 from rest_framework.views import APIView
@@ -12,12 +13,17 @@ from django.contrib.auth import authenticate, login,logout
 import requests
 
 # Rule of thumb: If it requires UserID, then authenticated users only!
+# Get Appointments of a certain date. All appointments if no date is set
 class AppointmentsView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = AppointmentSerializer
     def get_queryset(self):
-        return Appointments.objects.filter(UserID=self.request.user)
+        # /api/appointments/?Date=1997-09-26
+        Date = self.request.query_params.get('Date', None)
+        if (Date is None):
+                return Appointments.objects.filter(UserID=self.request.user.id)
+        return Appointments.objects.filter(UserID=self.request.user.id,AppDate=Date)
 
     def get_serializer_context(self):
         return {"request": self.request}
@@ -71,7 +77,10 @@ class LoginView(APIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.AllowAny]
     serializer_class = LoginUserSerializer
-    def post(self, request, format=None):
+
+    def get(self,request):
+        return Response('Ok')
+    def post(self, request):
         data = request.data
 
         username = data.get('username', None)
@@ -82,8 +91,7 @@ class LoginView(APIView):
         if user is not None:
             if user.is_active:
                 login(request, user)
-
-                return Response(status=200)
+                return Response({'user':user.username},status=200)
             else:
                 return Response(status=404)
         else:
@@ -196,12 +204,11 @@ class ServiceDetailsView(generics.RetrieveUpdateDestroyAPIView):
         
 
 class TechniciansView(generics.ListCreateAPIView):
-    authentication_classes = [authentication.SessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+
     serializer_class = TechniciansSerializer    
 
     def get_queryset(self):
-        return Technicians.objects.filter(UserID=self.request.user)
+        return Technicians.objects.filter(UserID=self.request.user.id)
     
     def get_serializer_context(self):
         return {"request": self.request}
