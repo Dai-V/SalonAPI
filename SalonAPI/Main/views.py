@@ -1,6 +1,7 @@
 from datetime import date
 import json
 from django.forms import ValidationError
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,6 +11,7 @@ from django.db.models import Sum, Count, Q
 from SalonAPI.Main.models import Appointments, Customer, SavedServices, Schedules, Services, Supplies, Technicians, User
 from SalonAPI.Main.serializers import AppointmentSerializer, ChangePasswordSerializer, CreateUserSerializer, CustomerSerializer, LoginUserSerializer, SavedServicesSerializer, SchedulesSerializer, ServicesSerializer, SuppliesSerializer, TechniciansSerializer, UpdateUserSerializer
 from django.contrib.auth import authenticate, login,logout
+from django.middleware.csrf import get_token
 import requests
 
 # Rule of thumb: If it requires UserID, then authenticated users only!
@@ -78,11 +80,9 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = LoginUserSerializer
 
-    def get(self,request):
-        return Response('Ok')
+
     def post(self, request):
         data = request.data
-
         username = data.get('username', None)
         password = data.get('password', None)
 
@@ -322,3 +322,16 @@ def totals(request, StartDate, EndDate):
             return json
     
 
+class IsLoggedIn(APIView):
+    permission_classes = [permissions.AllowAny]
+    def get(self,request):
+        print(request.user)
+        if (request.user.is_authenticated):
+            response = JsonResponse({'detail': 'CSRF cookie set'})
+            response['X-CSRFToken'] = get_token(request)
+            response.status_code = 200
+            return response
+        else:
+            return Response(status=401)
+
+    

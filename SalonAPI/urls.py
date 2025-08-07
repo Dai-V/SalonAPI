@@ -38,6 +38,7 @@ urlpatterns = [
     path('api/customer/standing_appointments/<int:pk>/',views.CustomerStandingAppointmentView.as_view(),name='customer_standing_appointments'),
     path('api/customer/appointment_history/<int:pk>/',views.CustomerAppointmentHistoryView.as_view(),name='customer_appointment_history'),
     path('api/login', views.LoginView.as_view(), name='login'),
+    path('api/is_logged_in',views.IsLoggedIn.as_view(),name='is_logged_in'),
     path('api/logout', views.LogoutView.as_view(), name='logout'),
     path('api/signup', views.SignupView.as_view(), name='signup'),
     path('api/change_password',views.ChangePasswordView.as_view(),name='change_password'),
