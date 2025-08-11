@@ -220,9 +220,7 @@ class TechniciansSerializer(serializers.ModelSerializer):
     )
     Services = ServicesSerializer(many=True, read_only=True)
 
-    def create(self,obj):
-        
-        return super().create(self,obj)
+
 
     def getAllByUser(User): 
         return Technicians.objects.filter(UserID=User)

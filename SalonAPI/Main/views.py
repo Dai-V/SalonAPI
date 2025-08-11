@@ -207,11 +207,24 @@ class TechniciansView(generics.ListCreateAPIView):
 
     serializer_class = TechniciansSerializer    
 
+    
     def get_queryset(self):
-        return Technicians.objects.filter(UserID=self.request.user.id)
+        Date = self.request.query_params.get('Date', None)
+        if (Date is None):
+            return Technicians.objects.filter(UserID=self.request.user.id)
+        else:
+            techs = Technicians.objects.filter(UserID=self.request.user.id)
+            for tech in techs:
+                Availability = Schedules.objects.filter(TechID=tech,To__gte=Date,From__lte=Date).values_list('Availability',flat=True).order_by('-Created_At').first()
+                if not Availability:
+                    techs = techs.exclude(TechID=tech.TechID)
+            return techs
+             
     
     def get_serializer_context(self):
         return {"request": self.request}
+    
+
     
         
 class TechnicianDetailsView(generics.RetrieveUpdateAPIView):
