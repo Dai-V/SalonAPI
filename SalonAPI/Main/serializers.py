@@ -167,7 +167,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         services = validated_data.pop('Services')
-        instance.save()
+        super().update(instance, validated_data)
         # Since Services doesn't have a unique identifier, we delete all services in the app and just create new ones. Might cause troubles in the future but we'll see
         Services.objects.filter(AppID=instance).delete()
         for service in services:
