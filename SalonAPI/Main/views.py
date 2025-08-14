@@ -91,7 +91,10 @@ class LoginView(APIView):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                return Response({'user':user.username},status=200)
+                response = JsonResponse({'detail': 'CSRF cookie set'})
+                response['X-CSRFToken'] = get_token(request)
+                response.status_code = 200
+                return response
             else:
                 return Response(status=404)
         else:
