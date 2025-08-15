@@ -24,8 +24,8 @@ class AppointmentsView(generics.ListCreateAPIView):
         # /api/appointments/?Date=1997-09-26
         Date = self.request.query_params.get('Date', None)
         if (Date is None):
-                return Appointments.objects.filter(UserID=self.request.user.id)
-        return Appointments.objects.filter(UserID=self.request.user.id,AppDate=Date)
+                return Appointments.objects.filter(UserID=self.request.user.id).exclude(AppStatus="Cancelled")
+        return Appointments.objects.filter(UserID=self.request.user.id,AppDate=Date).exclude(AppStatus="Cancelled")
 
     def get_serializer_context(self):
         return {"request": self.request}
