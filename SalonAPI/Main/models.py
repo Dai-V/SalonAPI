@@ -16,7 +16,7 @@ class Appointments(models.Model):
     CustomerID = models.ForeignKey('Customer', on_delete=models.CASCADE, related_name='Appointments')
 
 class User(AbstractUser):
-    UserPhone = models.CharField(max_length=15, unique=True)
+    UserPhone = models.CharField(max_length=15, unique=True, blank=True, null=True)
     UserAddress = models.CharField(max_length=255, blank=True, null=True) 
     UserSalonName = models.CharField(max_length=100, blank=True, null=True)  # e.g., 'Salon XYZ'
     UserInfo = models.TextField(blank=True, null=True)
@@ -25,7 +25,7 @@ class Customer(models.Model):
     CustomerID = models.AutoField(primary_key=True)
     CustomerFirstName = models.CharField(max_length=100, blank=True, null=True)
     CustomerLastName = models.CharField(max_length=100, blank=True, null=True)
-    CustomerEmail = models.EmailField(unique=True, blank=True, null=True)
+    CustomerEmail = models.EmailField(blank=True, null=True)
     CustomerPhone = models.CharField(max_length=15, blank=True, null=True)
     CustomerAddress = models.CharField(max_length=255, blank=True, null=True)  # e.g., '123 Main St'
     CustomerInfo = models.TextField(blank=True, null=True)  # Additional information about the customer
@@ -44,8 +44,8 @@ class SavedServices(models.Model):
 class Technicians (models.Model):
     TechID = models.AutoField(primary_key=True)
     TechName = models.CharField(max_length=100)
-    TechEmail = models.EmailField(unique=True)
-    TechPhone = models.CharField(max_length=15, unique=True)
+    TechEmail = models.EmailField(blank=True,null = True)
+    TechPhone = models.CharField(max_length=15, blank=True, null=True)
     TechSpecialization = models.CharField(max_length=100, blank=True, null=True)  # e.g., 'hair', 'nails'
     TechInfo = models.TextField(blank=True, null=True)  # Additional information about the technician
     UserID = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Technicians')

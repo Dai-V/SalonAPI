@@ -12,11 +12,11 @@ class CreateUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(
             username=validated_data['username'],
-            email = validated_data['email'],
-            UserPhone = validated_data['UserPhone'],
-            UserAddress = validated_data['UserAddress'],
-            UserSalonName = validated_data['UserSalonName'],
-            UserInfo = validated_data['UserInfo'],
+            # email = validated_data['email'],
+            # UserPhone = validated_data['UserPhone'],
+            # UserAddress = validated_data['UserAddress'],
+            # UserSalonName = validated_data['UserSalonName'],
+            # UserInfo = validated_data['UserInfo'],
         )
         user.set_password(validated_data['password'])
         user.save()
