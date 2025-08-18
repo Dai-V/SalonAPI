@@ -125,6 +125,11 @@ class ServicesSerializer(serializers.ModelSerializer):
     
     def getAll():
         return Services.objects.all()
+    
+    def TotalsByServices(User,StartDate,EndDate):
+        query = Services.objects.filter(AppID__UserID=User,AppID__AppDate__range=(StartDate,EndDate),AppID__AppStatus="Closed").values('ServiceCode','ServiceName').annotate(TotalServices=Count('ServiceName'),TotalPayments=Sum('ServicePrice')).order_by('-TotalPayments')
+        print (query)
+        return query
 
     class Meta:
         model = Services
@@ -225,15 +230,31 @@ class TechniciansSerializer(serializers.ModelSerializer):
     def getAllByUser(User): 
         return Technicians.objects.filter(UserID=User)
     
+    
+
+    def getAvailableByUser(User,StartDate,EndDate):
+        Techs = Technicians.objects.filter(UserID = User)
+        for Tech in Techs:
+            Availability = Schedules.objects.filter(TechID=Tech.TechID,To__gte=EndDate,From__lte=StartDate).values_list('Availability',flat=True).order_by('-Created_At').first()
+            if (not Availability):
+                Techs = Techs.exclude(TechID=Tech.TechID)
+        return Techs
+        
+    
     def ServicesDoneByTechnicians(User, StartDate,EndDate):
         # For every technician, show the total amount of services and payment of those services between Start Date and End Date
-        query = Technicians.objects.filter(UserID=User).select_related('Technicians','Appointments','Services').values('TechName').annotate(total_services=Count('Services', filter = Q(Services__AppID__AppDate__range=(StartDate,EndDate)) & Q(Services__AppID__AppStatus='Closed')), total_payment=Sum('Services__ServicePrice', filter = Q(Services__AppID__AppDate__range=(StartDate,EndDate)) & Q(Services__AppID__AppStatus='Closed'))).order_by('TechName')
+        Techs = Technicians.objects.filter(UserID=User).select_related('Technicians','Appointments','Services').values('TechID','TechName').annotate(TotalServices=Count('Services', filter = Q(Services__AppID__AppDate__range=(StartDate,EndDate)) & Q(Services__AppID__AppStatus='Closed')), TotalPayments=Sum('Services__ServicePrice', filter = Q(Services__AppID__AppDate__range=(StartDate,EndDate)) & Q(Services__AppID__AppStatus='Closed'))).order_by('-TotalPayments')
         # Show 0 instead of Null
-        for tech in query:
-            if (tech['total_payment'] is None):
-                tech['total_payment'] = 0
+        for Tech in Techs:
+            if (Tech['TotalPayments'] is None):
+                Tech['TotalPayments'] = 0
+            # Show only techs that are on the schedule from StartDate -> EndDate
+            Availability = Schedules.objects.filter(TechID=Tech['TechID'],To__gte=EndDate,From__lte=StartDate).values_list('Availability',flat=True).order_by('-Created_At').first()
+            if (not Availability):
+                Techs = Techs.exclude(TechID=Tech['TechID'])
+            
 
-        return query
+        return Techs
             
     class Meta:
         model = Technicians

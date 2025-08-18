@@ -304,39 +304,38 @@ class TotalsView(APIView):
 # Below here is a list of non-view methods for reuse 
 # List of totals
 def totals(request, StartDate, EndDate):
-            total_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).count()
-            total_services = ServicesSerializer.getAll().filter(AppID__AppDate__range=(StartDate,EndDate)).count()
-            total_technicians = TechniciansSerializer.getAllByUser(request.user).count()
-            total_earnings = sum(
+            TotalAppointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).count()
+            TotalServices = ServicesSerializer.getAll().filter(AppID__AppDate__range=(StartDate,EndDate)).count()
+            TotalTechnicians = TechniciansSerializer.getAvailableByUser(request.user,StartDate,EndDate).count()
+            TotalEarnings = sum(
                 appointment.AppTotal for appointment in AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate))
             )
-            total_closed_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate)).count()
-            total_closed_services = ServicesSerializer.getAll().filter(Q(AppID__AppDate__range=(StartDate,EndDate)) & Q(AppID__AppStatus='Closed')).count()
-            total_venmo_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Venmo', AppDate__range=(StartDate,EndDate)).count()
-            total_cash_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Cash', AppDate__range=(StartDate,EndDate)).count()
-            total_credit_card_appointments = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Card', AppDate__range=(StartDate,EndDate)).count()
-            total_customers = CustomerSerializer.getAll(request.user).filter(Appointments__AppDate__range=(StartDate,EndDate)).count()
-            total_open_appointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).exclude(AppStatus='Closed').count()
-            total_technicians_services = TechniciansSerializer.ServicesDoneByTechnicians(request.user,StartDate,EndDate)
+            TotalClosedAppointments = AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate)).count()
+            TotalClosedServices = ServicesSerializer.getAll().filter(Q(AppID__AppDate__range=(StartDate,EndDate)) & Q(AppID__AppStatus='Closed')).count()
+            TotalVenmoPayment = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Venmo', AppDate__range=(StartDate,EndDate)).count()
+            TotalCashPayment = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Cash', AppDate__range=(StartDate,EndDate)).count()
+            TotalCardPayment = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Card', AppDate__range=(StartDate,EndDate)).count()
+            TotalCustomers = CustomerSerializer.getAll(request.user).filter(Appointments__AppDate__range=(StartDate,EndDate)).count()
+            TotalOpenAppointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).exclude(AppStatus='Closed').count()
+            TotalServicesByTechnicians = TechniciansSerializer.ServicesDoneByTechnicians(request.user,StartDate,EndDate)
+            TotalsByServices = ServicesSerializer.TotalsByServices(request.user,StartDate,EndDate)
             json = JSONRenderer().render({
-                "From" : StartDate,
+                'From' : StartDate,
                 "To":EndDate,
-                "total_appointments": total_appointments,
-                "total_services": total_services,
-                "total_technicians": total_technicians,
-                "total_customers": total_customers,
-                "total_earnings": total_earnings,
-                "total_closed_appointments": total_closed_appointments,
-                "total_closed_services":total_closed_services,
-                "total_venmo_appointments": total_venmo_appointments,   
-                "total_cash_appointments": total_cash_appointments,
-                "total_credit_card_appointments": total_credit_card_appointments,
-                "total_open_appointments":total_open_appointments,
-                "total_technicians_services":total_technicians_services,
-
+                 "TotalAppointments": TotalAppointments,
+                 "TotalServices": TotalServices,
+                 "TotalTechnicians": TotalTechnicians,
+                 "TotalEarnings":TotalEarnings,
+                 "TotalClosedAppointments":TotalClosedAppointments,
+                 "TotalClosedServices": TotalClosedServices,
+                 "TotalCustomers":TotalCustomers,
+                 "TotalOpenAppointments":TotalOpenAppointments,
+                 "TotalServicesByTechnicians":TotalServicesByTechnicians,
+                 "TotalsByServices":TotalsByServices,
             })
             return json
-    
+
+
 
 class IsLoggedIn(APIView):
     permission_classes = [permissions.AllowAny]
