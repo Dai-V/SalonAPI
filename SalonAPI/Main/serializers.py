@@ -81,14 +81,14 @@ class SavedServicesSerializer(serializers.ModelSerializer):
     )
     ServiceDuration = serializers.IntegerField(min_value=0, default = 0)
     def validate_ServiceCode(self,value):
-        count = SavedServices.objects.filter(UserID=self.context.get('request').user.id, ServiceCode=value).count()
-        # Count > 1 to exclude the service we're editing on PUT
-        if (count >1 and self.context.get('request').method=="PUT"):
-                raise serializers.ValidationError('This service code already in use')
-        elif (count >0 and self.context.get('request').method=="POST"):
-                raise serializers.ValidationError('This service code already in use')
-        else: 
-            return value
+        count = 0
+        if (self.context.get('request').method=="PUT"):
+                count = SavedServices.objects.filter(UserID=self.context.get('request').user.id, ServiceCode=value).exclude(ServiceID=self.context.get('serviceID')).count()
+        elif (self.context.get('request').method=="POST"):
+                count = SavedServices.objects.filter(UserID=self.context.get('request').user.id, ServiceCode=value).count()
+        if (count > 0):
+                    raise serializers.ValidationError('This service code already in use')
+        return value
          
     def getSavedServicesByUser(User):
         saved_services = SavedServices.objects.filter(UserID=User)

@@ -61,7 +61,7 @@ class SavedServiceDetailsView(generics.RetrieveUpdateDestroyAPIView):
         return SavedServices.objects.filter(UserID=self.request.user)
     
     def get_serializer_context(self):
-        return {"request": self.request}
+        return {"request": self.request, "serviceID" : self.kwargs['pk']}
 
 # User profile view that allows an user to update their infos. Not for admin use
 class UserView(generics.RetrieveUpdateAPIView):
