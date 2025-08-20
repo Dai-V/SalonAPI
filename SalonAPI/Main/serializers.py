@@ -101,6 +101,7 @@ class SavedServicesSerializer(serializers.ModelSerializer):
 class ServicesSerializer(serializers.ModelSerializer):
     ServiceDuration = serializers.IntegerField(min_value=0, default = 0)
     AppID = serializers.PrimaryKeyRelatedField(read_only=True)
+   
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -137,12 +138,12 @@ class ServicesSerializer(serializers.ModelSerializer):
         
         
 # Get List of customers that is of the current user
-class CustomerPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
-    def get_queryset(self):
-        user = self.context['request'].user
-        return Customer.objects.filter(
-            UserID = user.id
-         )
+# class CustomerPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+#     def get_queryset(self):
+#         user = self.context['request'].user
+#         return Customer.objects.filter(
+#             UserID=user
+#          )
     
 class AppointmentSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
@@ -158,8 +159,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         default=0)
     PaymentType = serializers.CharField(default='')
     Services = ServicesSerializer(many=True)
-    CustomerID = CustomerPrimaryKeyRelatedField( 
-    )
+    CustomerID = serializers.PrimaryKeyRelatedField(queryset = Customer.objects.all())
 
     # To create appointment and services that are included at the same time
     def create(self, validated_data):
