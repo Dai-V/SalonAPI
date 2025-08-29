@@ -304,37 +304,89 @@ class TotalsView(APIView):
 # Below here is a list of non-view methods for reuse 
 # List of totals
 def totals(request, StartDate, EndDate):
-            TotalAppointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).count()
-            TotalServices = ServicesSerializer.getAll().filter(AppID__AppDate__range=(StartDate,EndDate)).count()
-            TotalTechnicians = TechniciansSerializer.getAvailableByUser(request.user,StartDate,EndDate).count()
+            Appointments =  AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate))
+            OpenAppointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).exclude(AppStatus='Closed')
+            ClosedAppointments = AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate))
+            TotalEarningsByPaymentType = ClosedAppointments.values('PaymentType').annotate(TotalPayments=Sum('AppTotal',distinct=True )).order_by('-TotalPayments')
+            ClosedServices = Services.objects.filter(Q(AppID__AppDate__range=(StartDate,EndDate)) & Q(AppID__AppStatus='Closed') & Q(AppID__UserID=request.user))
+            Customers =  CustomerSerializer.getAll(request.user).filter(Appointments__AppDate__range=(StartDate,EndDate))
+            CountAppointments = Appointments.count()
+            CountServices = ServicesSerializer.getAll().filter(AppID__AppDate__range=(StartDate,EndDate)).count()
+            CountTechnicians = TechniciansSerializer.getAvailableByUser(request.user,StartDate,EndDate).count()
             TotalEarnings = sum(
                 appointment.AppTotal for appointment in AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate))
             )
-            TotalClosedAppointments = AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate)).count()
-            TotalClosedServices = ServicesSerializer.getAll().filter(Q(AppID__AppDate__range=(StartDate,EndDate)) & Q(AppID__AppStatus='Closed')).count()
-            TotalVenmoPayment = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Venmo', AppDate__range=(StartDate,EndDate)).count()
-            TotalCashPayment = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Cash', AppDate__range=(StartDate,EndDate)).count()
-            TotalCardPayment = AppointmentSerializer.getAllByUser(request.user).filter(PaymentType='Card', AppDate__range=(StartDate,EndDate)).count()
-            TotalCustomers = CustomerSerializer.getAll(request.user).filter(Appointments__AppDate__range=(StartDate,EndDate)).count()
-            TotalOpenAppointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).exclude(AppStatus='Closed').count()
+            CountClosedAppointments = ClosedAppointments.count()
+            CountClosedServices = ClosedServices.count()
+            CountCustomers = Customers.count()
+            CountOpenAppointments = OpenAppointments.count()
             TotalServicesByTechnicians = TechniciansSerializer.ServicesDoneByTechnicians(request.user,StartDate,EndDate)
             TotalsByServices = ServicesSerializer.TotalsByServices(request.user,StartDate,EndDate)
             json = JSONRenderer().render({
                 'From' : StartDate,
                 "To":EndDate,
-                 "TotalAppointments": TotalAppointments,
-                 "TotalServices": TotalServices,
-                 "TotalTechnicians": TotalTechnicians,
+                 "CountAppointments": CountAppointments,
+                 "CountServices": CountServices,
+                 "CountTechnicians": CountTechnicians,
                  "TotalEarnings":TotalEarnings,
-                 "TotalClosedAppointments":TotalClosedAppointments,
-                 "TotalClosedServices": TotalClosedServices,
-                 "TotalCustomers":TotalCustomers,
-                 "TotalOpenAppointments":TotalOpenAppointments,
+                 "TotalEarningsByPaymentType":TotalEarningsByPaymentType,
+                 "CountClosedAppointments":CountClosedAppointments,
+                 "CountClosedServices": CountClosedServices,
+                 "CountCustomers":CountCustomers,
+                 "CountOpenAppointments":CountOpenAppointments,
                  "TotalServicesByTechnicians":TotalServicesByTechnicians,
                  "TotalsByServices":TotalsByServices,
             })
             return json
 
+class DashboardView(APIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+            # Format is  /api/dashboard/?StartDate=1997-09-26&EndDate=2025-07-25
+
+            StartDate = request.query_params.get('StartDate', None)
+            EndDate = request.query_params.get('EndDate', None)
+            if (StartDate is None):
+                StartDate = date.today()
+            if (EndDate is None):
+                EndDate = date.today()
+            if StartDate > EndDate:
+                return Response(({'message': "Start date can't be later than End Date"}), status=404)
+            
+            return Response(getDashBoard(request,StartDate,EndDate))
+    
+# Below here is a list of non-view methods for reuse 
+def getDashBoard(request, StartDate, EndDate):
+            Appointments =  AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate))
+            OpenAppointments = AppointmentSerializer.getAllByUser(request.user).filter(AppDate__range=(StartDate,EndDate)).exclude(AppStatus='Closed')
+            ClosedAppointments = AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate))
+            Customers =  CustomerSerializer.getAll(request.user).filter(Appointments__AppDate__range=(StartDate,EndDate))
+            ScheduledTechs = TechniciansSerializer.getAvailableByUser(request.user,StartDate,EndDate)
+            ScheduledTechs_serializer = TechniciansSerializer(ScheduledTechs,many=True)
+            CountAppointments = Appointments.count()
+            CountServices = ServicesSerializer.getAll().filter(AppID__AppDate__range=(StartDate,EndDate)).count()
+            CountTechnicians = TechniciansSerializer.getAvailableByUser(request.user,StartDate,EndDate).count()
+            TotalEarnings = sum(
+                appointment.AppTotal for appointment in AppointmentSerializer.getAllByUser(request.user).filter(AppStatus='Closed', AppDate__range=(StartDate,EndDate))
+            )
+            CountClosedAppointments = ClosedAppointments.count()
+            CountCustomers = Customers.count()
+            CountOpenAppointments = OpenAppointments.count()
+            json = JSONRenderer().render({
+                'From' : StartDate,
+                "To":EndDate,
+                 "CountAppointments": CountAppointments,
+                 "CountServices": CountServices,
+                 "CountTechnicians": CountTechnicians,
+                 "TotalEarnings":TotalEarnings,
+                 "CountClosedAppointments":CountClosedAppointments,
+                 "CountCustomers":CountCustomers,
+                 "CountOpenAppointments":CountOpenAppointments,
+                 "ScheduledTechs":ScheduledTechs_serializer.data
+            })
+            return json
 
 
 class IsLoggedIn(APIView):
