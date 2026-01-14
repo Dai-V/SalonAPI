@@ -76,7 +76,7 @@ class UserView(generics.RetrieveUpdateAPIView):
 
     
 class LoginView(APIView):
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
     serializer_class = LoginUserSerializer
 
@@ -110,7 +110,7 @@ class LogoutView(APIView):
         
 
 class SignupView(APIView):
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
     serializer_class = CreateUserSerializer
 
