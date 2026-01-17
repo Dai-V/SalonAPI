@@ -156,13 +156,13 @@ class CustomerDetailsView(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         return Customer.objects.filter(UserID=self.request.user)
     
-class CustomerStandingAppointmentView(generics.ListAPIView):
-    authentication_classes = [authentication.SessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = AppointmentSerializer
-    def get_queryset(self, *args, **kwargs):
-        CustomerID = self.kwargs['pk']
-        return Appointments.objects.filter(UserID = self.request.user,CustomerID=CustomerID, AppStatus="Open")
+# class CustomerStandingAppointmentView(generics.ListAPIView):
+#     authentication_classes = [authentication.SessionAuthentication]
+#     permission_classes = [permissions.IsAuthenticated]
+#     serializer_class = AppointmentSerializer
+#     def get_queryset(self, *args, **kwargs):
+#         CustomerID = self.kwargs['pk']
+#         return Appointments.objects.filter(UserID = self.request.user,CustomerID=CustomerID, AppStatus="Open")
     
 class CustomerAppointmentHistoryView(generics.ListAPIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -170,7 +170,7 @@ class CustomerAppointmentHistoryView(generics.ListAPIView):
     serializer_class = AppointmentSerializer
     def get_queryset(self, *args, **kwargs):
         CustomerID = self.kwargs['pk']
-        return Appointments.objects.filter(UserID = self.request.user,CustomerID=CustomerID, AppStatus="Closed")
+        return Appointments.objects.filter(UserID = self.request.user,CustomerID=CustomerID)
     
 class ServicesView(generics.ListAPIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -394,8 +394,7 @@ class IsLoggedIn(APIView):
     def get(self,request):
         print(request.user)
         if (request.user.is_authenticated):
-            response = JsonResponse({'detail': 'CSRF cookie set'})
-            response['X-CSRFToken'] = get_token(request)
+            response = JsonResponse({'detail': 'CSRF cookie set', 'X-CSRFToken': get_token(request)})
             response.status_code = 200
             return response
         else:

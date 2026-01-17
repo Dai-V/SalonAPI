@@ -135,6 +135,7 @@ class ServicesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Services
         fields = ['ServiceName', 'ServiceCode', 'ServiceDescription', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration',  'TechID','AppID']
+        depth = 1
         
         
 # Get List of customers that is of the current user
@@ -259,6 +260,7 @@ class TechniciansSerializer(serializers.ModelSerializer):
     class Meta:
         model = Technicians
         fields = ['TechID', 'TechName', 'TechEmail', 'TechPhone', 'TechInfo', 'Services', 'UserID']
+        
 
 class SchedulesSerializer(serializers.ModelSerializer):
     Created_At = serializers.ReadOnlyField()

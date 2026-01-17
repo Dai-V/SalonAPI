@@ -36,7 +36,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path('api/customers/', views.CustomerView.as_view(), name='customers'),
     path('api/customers/<int:pk>/', views.CustomerDetailsView.as_view(), name='customer_details'),
-    path('api/customer/standing_appointments/<int:pk>/',views.CustomerStandingAppointmentView.as_view(),name='customer_standing_appointments'),
+    # path('api/customer/standing_appointments/<int:pk>/',views.CustomerStandingAppointmentView.as_view(),name='customer_standing_appointments'),
     path('api/customer/appointment_history/<int:pk>/',views.CustomerAppointmentHistoryView.as_view(),name='customer_appointment_history'),
     path('api/login/', views.LoginView.as_view(), name='login'),
     path('api/is_logged_in/',views.IsLoggedIn.as_view(),name='is_logged_in'),
