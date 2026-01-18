@@ -145,6 +145,10 @@ class ServicesSerializer(serializers.ModelSerializer):
 #         return Customer.objects.filter(
 #             UserID=user
 #          )
+class CustomerBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ['CustomerID', 'CustomerFirstName', 'CustomerLastName', 'CustomerEmail', 'CustomerPhone', 'CustomerAddress', 'CustomerInfo', 'UserID']
     
 class AppointmentSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
@@ -160,7 +164,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         default=0)
     PaymentType = serializers.CharField(default='')
     Services = ServicesSerializer(many=True)
-    CustomerID = serializers.PrimaryKeyRelatedField(queryset = Customer.objects.all())
+    CustomerID = CustomerBasicSerializer()
 
     # To create appointment and services that are included at the same time
     def create(self, validated_data):

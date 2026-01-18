@@ -244,11 +244,11 @@ class TechnicianDetailsView(generics.RetrieveUpdateAPIView):
 class TechnicianServiceHistoryView(generics.ListAPIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ServicesSerializer
+    serializer_class = AppointmentSerializer
 
     def get_queryset(self, *args, **kwargs):
         TechID = self.kwargs['pk']
-        return Services.objects.filter(AppID__UserID=self.request.user,TechID=TechID,AppID__AppStatus="Closed")
+        return Appointments.objects.filter(UserID=self.request.user, Services__TechID=TechID).distinct()
     
 class SchedulesView(generics.ListCreateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
