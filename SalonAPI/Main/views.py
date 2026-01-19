@@ -207,10 +207,7 @@ class ServiceDetailsView(generics.RetrieveUpdateDestroyAPIView):
         
 
 class TechniciansView(generics.ListCreateAPIView):
-
     serializer_class = TechniciansSerializer    
-
-    
     def get_queryset(self):
         Date = self.request.query_params.get('Date', None)
         if (Date is None):
@@ -222,13 +219,8 @@ class TechniciansView(generics.ListCreateAPIView):
                 if not Availability:
                     techs = techs.exclude(TechID=tech.TechID)
             return techs
-             
-    
     def get_serializer_context(self):
         return {"request": self.request}
-    
-
-    
         
 class TechnicianDetailsView(generics.RetrieveUpdateAPIView):
     authentication_classes = [authentication.SessionAuthentication]
@@ -237,6 +229,18 @@ class TechnicianDetailsView(generics.RetrieveUpdateAPIView):
    
     def get_queryset(self):
         return Technicians.objects.filter(UserID=self.request.user)
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+class TechnicianSchedulesView(generics.ListCreateAPIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SchedulesSerializer 
+   
+    def get_queryset(self):
+        TechID = self.kwargs['pk']
+        return Schedules.objects.filter(TechID__UserID=self.request.user, TechID = TechID)
     
     def get_serializer_context(self):
         return {"request": self.request}

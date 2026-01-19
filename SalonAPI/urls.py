@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/profile/',views.UserView.as_view(), name='profile'),
     path('api/technicians/', views.TechniciansView.as_view(), name='technicians'),
     path('api/technicians/<int:pk>/', views.TechnicianDetailsView.as_view(), name='technician_details'),
+    path('api/technicians/<int:pk>/schedules/', views.TechnicianSchedulesView.as_view(), name='technician_schedules'),
     path('api/technicians/service_history/<int:pk>/', views.TechnicianServiceHistoryView.as_view(), name='technician_service_history'),
     path('api-auth/', include('rest_framework.urls')),
     path('api/customers/', views.CustomerView.as_view(), name='customers'),
