@@ -6,6 +6,7 @@ __pycache__
 db.sqlite3
 media
 **/__pycache__/
+*.pyc
 
 # Backup files # 
 *.bak 
@@ -137,6 +138,18 @@ GitHub.sublime-settings
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+SalonAPI/__pycache__/__init__.cpython-313.pyc
+SalonAPI/__pycache__/settings.cpython-313.pyc
+SalonAPI/__pycache__/urls.cpython-313.pyc
+SalonAPI/__pycache__/wsgi.cpython-313.pyc
+SalonAPI/Main/__pycache__/__init__.cpython-313.pyc
+SalonAPI/Main/__pycache__/admin.cpython-313.pyc
+SalonAPI/Main/__pycache__/apps.cpython-313.pyc
+SalonAPI/Main/__pycache__/models.cpython-313.pyc
+SalonAPI/Main/__pycache__/serializers.cpython-313.pyc
+SalonAPI/Main/__pycache__/views.cpython-313.pyc
+SalonAPI/Main/migrations/__pycache__/__init__.cpython-313.pyc
+SalonAPI/Main/migrations/__pycache__/0001_initial.cpython-313.pyc
 SalonAPI/__pycache__/__init__.cpython-313.pyc
 SalonAPI/__pycache__/settings.cpython-313.pyc
 SalonAPI/__pycache__/urls.cpython-313.pyc
