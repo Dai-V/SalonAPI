@@ -101,6 +101,8 @@ class SavedServicesSerializer(serializers.ModelSerializer):
 class ServicesSerializer(serializers.ModelSerializer):
     ServiceDuration = serializers.IntegerField(min_value=0, default = 0)
     AppID = serializers.PrimaryKeyRelatedField(read_only=True)
+    TechID = serializers.PrimaryKeyRelatedField(queryset=Technicians.objects.all())
+    TechName = serializers.ReadOnlyField(source='TechID.TechName')
    
 
     def __init__(self, *args, **kwargs):
@@ -134,8 +136,8 @@ class ServicesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Services
-        fields = ['ServiceName', 'ServiceCode', 'ServiceDescription', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration',  'TechID','AppID']
-        depth = 1
+        fields = ['ServiceID','ServiceName', 'ServiceCode', 'ServiceDescription', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration',  'TechID','TechName','AppID']
+        
         
         
 # Get List of customers that is of the current user
@@ -150,6 +152,8 @@ class CustomerBasicSerializer(serializers.ModelSerializer):
         model = Customer
         fields = ['CustomerID', 'CustomerFirstName', 'CustomerLastName', 'CustomerEmail', 'CustomerPhone', 'CustomerAddress', 'CustomerInfo', 'UserID']
     
+        
+
 class AppointmentSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
         default = serializers.CurrentUserDefault()
@@ -176,12 +180,38 @@ class AppointmentSerializer(serializers.ModelSerializer):
         return AppointmentSerializer.updateAppTotal(appointment.AppID)
     
     def update(self, instance, validated_data):
-        services = validated_data.pop('Services')
+        services_data = validated_data.pop('Services', [])
+        
+        # Update the appointment fields
         super().update(instance, validated_data)
-        # Since Services doesn't have a unique identifier, we delete all services in the app and just create new ones. Might cause troubles in the future but we'll see
-        Services.objects.filter(AppID=instance).delete()
-        for service in services:
-                Services.objects.create(AppID=instance,**service)
+        
+        # Get existing service IDs
+        existing_service_ids = set()
+        
+        # Update or create services
+        for service_data in services_data:
+            service_id = service_data.get('ServiceID')
+            
+            if service_id:
+                # Update existing service
+                try:
+                    service = Services.objects.get(ServiceID=service_id, AppID=instance)
+                    for key, value in service_data.items():
+                        setattr(service, key, value)
+                    service.save()
+                    existing_service_ids.add(service_id)
+                except Services.DoesNotExist:
+                    # ServiceID provided but doesn't exist, create new
+                    Services.objects.create(AppID=instance, **service_data)
+            else:
+                # No ServiceID provided, create new service
+                service = Services.objects.create(AppID=instance, **service_data)
+                existing_service_ids.add(service.ServiceID)
+        
+        Services.objects.filter(AppID=instance).exclude(
+            ServiceID__in=existing_service_ids
+        ).delete()
+        
         return AppointmentSerializer.updateAppTotal(instance.AppID)
 
    

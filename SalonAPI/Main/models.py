@@ -51,6 +51,7 @@ class Technicians (models.Model):
     UserID = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Technicians')
 
 class Services(models.Model):
+    ServiceID = models.AutoField(primary_key=True) 
     ServiceName = models.CharField(max_length=100)
     ServiceCode = models.CharField(max_length=20)  
     ServiceDescription = models.TextField(blank=True, null=True) 
