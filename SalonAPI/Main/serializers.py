@@ -154,7 +154,7 @@ class CustomerBasicSerializer(serializers.ModelSerializer):
     
         
 
-class AppointmentSerializer(serializers.ModelSerializer):
+class AppointmentGetSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
         default = serializers.CurrentUserDefault()
     )
@@ -170,6 +170,36 @@ class AppointmentSerializer(serializers.ModelSerializer):
     Services = ServicesSerializer(many=True)
     CustomerID = CustomerBasicSerializer()
 
+
+
+    def getAllByUser(User):
+        appointments = Appointments.objects.filter(UserID=User).order_by('-AppDate')
+        return appointments
+    
+    def deleteAllByUser(User):
+        count = Appointments.objects.filter(UserID=User).delete()
+        return count
+  
+    class Meta:
+        model = Appointments
+        fields = ['AppID', 'AppDate', 'AppStatus','AppTotal','AppComment', 'PaymentType','UserID','Services','CustomerID']
+
+class AppointmentPostSerializer(serializers.ModelSerializer):
+    UserID = serializers.HiddenField(
+        default = serializers.CurrentUserDefault()
+    )
+    # Open (Created), Pending (Checked In), Closed (Paid), Voided, Cancelled
+    AppStatus = serializers.ChoiceField(default='Open',
+    choices=[
+        'Open', 'Closed', 'Voided', 'Cancelled', 'Pending'
+    ]
+    )
+    AppTotal = serializers.ReadOnlyField(
+        default=0)
+    PaymentType = serializers.CharField(default='')
+    Services = ServicesSerializer(many=True)
+    CustomerID = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
+
     # To create appointment and services that are included at the same time
     def create(self, validated_data):
         services = validated_data.pop('Services')
@@ -177,7 +207,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         print (appointment)
         for service in services:
             Services.objects.create(AppID=appointment,**service)
-        return AppointmentSerializer.updateAppTotal(appointment.AppID)
+        return AppointmentPostSerializer.updateAppTotal(appointment.AppID)
     
     def update(self, instance, validated_data):
         services_data = validated_data.pop('Services', [])
@@ -212,7 +242,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             ServiceID__in=existing_service_ids
         ).delete()
         
-        return AppointmentSerializer.updateAppTotal(instance.AppID)
+        return AppointmentPostSerializer.updateAppTotal(instance.AppID)
 
    
     def validate(self,data):
@@ -253,6 +283,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointments
         fields = ['AppID', 'AppDate', 'AppStatus','AppTotal','AppComment', 'PaymentType','UserID','Services','CustomerID']
+
 
 class TechniciansSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
@@ -307,7 +338,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     UserID = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
-    Appointments = AppointmentSerializer(many=True,read_only=True)
+    Appointments = AppointmentGetSerializer(many=True,read_only=True)
 
 
     def getAll(User):
@@ -320,7 +351,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         else: return None
     
     def getServiceHistory(CustomerID):
-        app = AppointmentSerializer.getAppByCustomer(CustomerID)
+        app = AppointmentPostSerializer.getAppByCustomer(CustomerID)
         app = app.filter(AppStatus = "Closed")
         return app
     
