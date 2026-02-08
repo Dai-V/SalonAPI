@@ -40,7 +40,7 @@ class AppointmentDetailsView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_serializer_class(self):
-        if self.request.method == 'POST':
+        if self.request.method == 'PUT':
             return AppointmentPostSerializer
         return AppointmentGetSerializer
 
