@@ -58,6 +58,7 @@ class Services(models.Model):
     ServicePrice = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
     ServiceStartTime = models.TimeField(default=time(0,0))
     ServiceDuration = models.IntegerField(default=30)
+    ServiceComment = models.CharField(max_length=50, blank=True, null=True)
     AppID = models.ForeignKey(Appointments, on_delete=models.CASCADE, related_name='Services')
     TechID = models.ForeignKey(Technicians, on_delete=models.CASCADE,related_name='Services') 
 

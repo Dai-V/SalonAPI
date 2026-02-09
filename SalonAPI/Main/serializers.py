@@ -136,7 +136,7 @@ class ServicesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Services
-        fields = ['ServiceID','ServiceName', 'ServiceCode', 'ServiceDescription', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration',  'TechID','TechName','AppID']
+        fields = ['ServiceID','ServiceName', 'ServiceCode', 'ServiceDescription', 'ServicePrice', 'ServiceStartTime', 'ServiceDuration', 'ServiceComment', 'TechID','TechName','AppID']
         
         
         
