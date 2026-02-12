@@ -29,6 +29,7 @@ class Customer(models.Model):
     CustomerPhone = models.CharField(max_length=15, blank=True, null=True)
     CustomerAddress = models.CharField(max_length=255, blank=True, null=True)  # e.g., '123 Main St'
     CustomerInfo = models.TextField(blank=True, null=True)  # Additional information about the customer
+    CustomerCreatedAt = models.DateTimeField(blank=False, null=False, default=django.utils.timezone.now)
     UserID = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Customers')
 
 

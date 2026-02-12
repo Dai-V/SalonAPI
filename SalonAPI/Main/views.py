@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions,generics
 from rest_framework.renderers import JSONRenderer,BrowsableAPIRenderer,TemplateHTMLRenderer, StaticHTMLRenderer
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, Min, Max, Avg
 from django.db.models.functions import Extract
 from SalonAPI.Main.models import Appointments, Customer, SavedServices, Schedules, Services, Supplies, Technicians, User
 from SalonAPI.Main.serializers import AppointmentGetSerializer, AppointmentPostSerializer, ChangePasswordSerializer, CreateUserSerializer, CustomerSerializer, LoginUserSerializer, SavedServicesSerializer, SchedulesSerializer, ServicesSerializer, SuppliesSerializer, TechniciansSerializer, UpdateUserSerializer
@@ -373,19 +373,24 @@ class DashboardView(APIView):
             return Response(getDashBoard(request,StartDate,EndDate))
     
 def getDashBoard(request, StartDate, EndDate):
-            TopServices = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate),  AppID__UserID=request.user).values('ServiceName').annotate(Count=Count('ServiceName')).order_by('-Count')[:5]
+            TopServices = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate),  AppID__UserID=request.user).values('ServiceName').annotate(Count=Count('ServiceName')).order_by('-Count')[:4]
+            ServiceCount = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate),  AppID__UserID=request.user).count()
+
             AppointmentCountByStatus = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user).values('AppStatus').annotate(Count=Count('AppStatus')).order_by('-Count')
-            ExpectedTotalsByDate = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user).values('AppDate').annotate(Total=Sum('AppTotal')).order_by('AppDate')
-            EarnedTotalsByDate = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user, AppStatus='Closed').values('AppDate').annotate(Total=Sum('AppTotal')).order_by('AppDate')
-            TotalsByDayOfWeek = Appointments.objects.filter(UserID=request.user).annotate(DayOfWeek=Extract('AppDate', 'week_day')).values('DayOfWeek').annotate(Total=Sum('AppTotal')).order_by('DayOfWeek')
+            EarnedTotals = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=  request.user, AppStatus='Closed').aggregate(Total=Sum('AppTotal'))['Total']
+            AppointmentAverage = Appointments.objects.filter(AppDate__range=(StartDate, EndDate), UserID=request.user,AppStatus='Closed').aggregate(Avg=Avg('AppTotal'),Max=Max('AppTotal'),Min=Min('AppTotal'))
+            DailyRevenueAverage = Appointments.objects.filter(AppDate__range=(StartDate, EndDate), UserID=request.user, AppStatus='Closed').values('AppDate').annotate(Total=Sum('AppTotal')).aggregate(Avg=Avg('Total'),Max=Max('Total'),Min=Min('Total'))
+            TotalsByDayOfWeek = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user, AppStatus='Closed').annotate(DayOfWeek=Extract('AppDate', 'week_day')).values('DayOfWeek').annotate(Total=Sum('AppTotal')).order_by('DayOfWeek')
             TechTotalsByDate = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate), AppID__UserID=request.user).values('TechID__TechName').annotate(Total=Sum('ServicePrice')).order_by('-Total')
             return ({
                 'From' : StartDate,
                 "To":EndDate,
+                "ServiceCount": ServiceCount,
                 "TopServices": TopServices, 
                 "AppointmentCountByStatus": AppointmentCountByStatus,
-                "ExpectedTotalsByDate": ExpectedTotalsByDate,
-                "EarnedTotalsByDate": EarnedTotalsByDate,
+                "EarnedTotals": EarnedTotals,
+                "AppointmentAverage": AppointmentAverage,
+                "DailyRevenueAverage": DailyRevenueAverage,
                 "TechTotalsByDate": TechTotalsByDate,
                 "TotalsByDayOfWeek": TotalsByDayOfWeek,
             })
