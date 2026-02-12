@@ -7,7 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions,generics
 from rest_framework.renderers import JSONRenderer,BrowsableAPIRenderer,TemplateHTMLRenderer, StaticHTMLRenderer
-from django.db.models import Sum, Count, Q, Min, Max, Avg
+from django.db.models import Sum, Count, Q, Min, Max, Avg, F
+from datetime import timedelta, datetime, date
 from django.db.models.functions import Extract
 from SalonAPI.Main.models import Appointments, Customer, SavedServices, Schedules, Services, Supplies, Technicians, User
 from SalonAPI.Main.serializers import AppointmentGetSerializer, AppointmentPostSerializer, ChangePasswordSerializer, CreateUserSerializer, CustomerSerializer, LoginUserSerializer, SavedServicesSerializer, SchedulesSerializer, ServicesSerializer, SuppliesSerializer, TechniciansSerializer, UpdateUserSerializer
@@ -363,38 +364,55 @@ class DashboardView(APIView):
 
             StartDate = request.query_params.get('StartDate', None)
             EndDate = request.query_params.get('EndDate', None)
-            if (StartDate is None):
+           
+            if StartDate:
+                StartDate = datetime.strptime(StartDate, "%Y-%m-%d").date()
+            else:
                 StartDate = date.today()
-            if (EndDate is None):
+
+            if EndDate:
+                EndDate = datetime.strptime(EndDate, "%Y-%m-%d").date()
+            else:
                 EndDate = date.today()
+
             if StartDate > EndDate:
-                return Response(({'message': "Start date can't be later than End Date"}), status=400)
+                return Response(
+                    {'message': "Start date can't be later than End Date"},
+                    status=400
+                )
             
-            return Response(getDashBoard(request,StartDate,EndDate))
-    
-def getDashBoard(request, StartDate, EndDate):
             TopServices = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate),  AppID__UserID=request.user).values('ServiceName').annotate(Count=Count('ServiceName')).order_by('-Count')[:4]
             ServiceCount = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate),  AppID__UserID=request.user).count()
-
+            ServiceCountLast = Services.objects.filter(AppID__AppDate__range=(StartDate-(EndDate-StartDate+timedelta(days=1)), EndDate-(EndDate-StartDate+timedelta(days=1))),  AppID__UserID=request.user).count()
             AppointmentCountByStatus = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user).values('AppStatus').annotate(Count=Count('AppStatus')).order_by('-Count')
+            AppointmentCountByStatusLast = Appointments.objects.filter(AppDate__range=(StartDate-(EndDate-StartDate+timedelta(days=1)), EndDate-(EndDate-StartDate+timedelta(days=1))), UserID=request.user).values('AppStatus').annotate(Count=Count('AppStatus')).order_by('-Count')
             EarnedTotals = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=  request.user, AppStatus='Closed').aggregate(Total=Sum('AppTotal'))['Total']
+            EarnedTotalsLast = Appointments.objects.filter(AppDate__range=(StartDate-(EndDate-StartDate+timedelta(days=1)), EndDate-(EndDate-StartDate+timedelta(days=1))), UserID=  request.user, AppStatus='Closed').aggregate(Total=Sum('AppTotal'))['Total']
             AppointmentAverage = Appointments.objects.filter(AppDate__range=(StartDate, EndDate), UserID=request.user,AppStatus='Closed').aggregate(Avg=Avg('AppTotal'),Max=Max('AppTotal'),Min=Min('AppTotal'))
             DailyRevenueAverage = Appointments.objects.filter(AppDate__range=(StartDate, EndDate), UserID=request.user, AppStatus='Closed').values('AppDate').annotate(Total=Sum('AppTotal')).aggregate(Avg=Avg('Total'),Max=Max('Total'),Min=Min('Total'))
             TotalsByDayOfWeek = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user, AppStatus='Closed').annotate(DayOfWeek=Extract('AppDate', 'week_day')).values('DayOfWeek').annotate(Total=Sum('AppTotal')).order_by('DayOfWeek')
-            TechTotalsByDate = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate), AppID__UserID=request.user).values('TechID__TechName').annotate(Total=Sum('ServicePrice')).order_by('-Total')
-            return ({
+            # TechTotalsByDate = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate), AppID__UserID=request.user).values(TechName=F('TechID__TechName')).annotate(Total=Sum('ServicePrice')).order_by('-Total')
+            TechTotals = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate), AppID__UserID=request.user, AppID__AppStatus='Closed').annotate(Total=Sum('ServicePrice'),TechName=F('TechID__TechName')).values('TechName','Total').order_by('-Total')
+
+            return Response({
                 'From' : StartDate,
                 "To":EndDate,
                 "ServiceCount": ServiceCount,
+                "ServiceCountLast": ServiceCountLast,
                 "TopServices": TopServices, 
                 "AppointmentCountByStatus": AppointmentCountByStatus,
+                "AppointmentCountByStatusLast": AppointmentCountByStatusLast,
                 "EarnedTotals": EarnedTotals,
+                "EarnedTotalsLast": EarnedTotalsLast,
                 "AppointmentAverage": AppointmentAverage,
+                
                 "DailyRevenueAverage": DailyRevenueAverage,
-                "TechTotalsByDate": TechTotalsByDate,
+                # "TechTotalsByDate": TechTotalsByDate,
                 "TotalsByDayOfWeek": TotalsByDayOfWeek,
+                "TechTotals": TechTotals,
             })
 
+            
 
 class IsLoggedIn(APIView):
     permission_classes = [permissions.AllowAny]
