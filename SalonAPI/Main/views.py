@@ -385,7 +385,6 @@ class DashboardView(APIView):
             ServiceCount = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate),  AppID__UserID=request.user).count()
             ServiceCountLast = Services.objects.filter(AppID__AppDate__range=(StartDate-(EndDate-StartDate+timedelta(days=1)), EndDate-(EndDate-StartDate+timedelta(days=1))),  AppID__UserID=request.user).count()
             AppointmentCountByStatus = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user).values('AppStatus').annotate(Count=Count('AppStatus')).order_by('-Count')
-            AppointmentCountByStatusLast = Appointments.objects.filter(AppDate__range=(StartDate-(EndDate-StartDate+timedelta(days=1)), EndDate-(EndDate-StartDate+timedelta(days=1))), UserID=request.user).values('AppStatus').annotate(Count=Count('AppStatus')).order_by('-Count')
             EarnedTotals = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=  request.user, AppStatus='Closed').aggregate(Total=Sum('AppTotal'))['Total']
             EarnedTotalsLast = Appointments.objects.filter(AppDate__range=(StartDate-(EndDate-StartDate+timedelta(days=1)), EndDate-(EndDate-StartDate+timedelta(days=1))), UserID=  request.user, AppStatus='Closed').aggregate(Total=Sum('AppTotal'))['Total']
             AppointmentAverage = Appointments.objects.filter(AppDate__range=(StartDate, EndDate), UserID=request.user,AppStatus='Closed').aggregate(Avg=Avg('AppTotal'),Max=Max('AppTotal'),Min=Min('AppTotal'))
@@ -393,19 +392,32 @@ class DashboardView(APIView):
             TotalsByDayOfWeek = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user, AppStatus='Closed').annotate(DayOfWeek=Extract('AppDate', 'week_day')).values('DayOfWeek').annotate(Total=Sum('AppTotal')).order_by('DayOfWeek')
             # TechTotalsByDate = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate), AppID__UserID=request.user).values(TechName=F('TechID__TechName')).annotate(Total=Sum('ServicePrice')).order_by('-Total')
             TechTotals = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate), AppID__UserID=request.user, AppID__AppStatus='Closed').annotate(Total=Sum('ServicePrice'),TechName=F('TechID__TechName')).values('TechName','Total').order_by('-Total')
+            
+            AppointmentCount = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user).count()
+            AppointmentCountLast = Appointments.objects.filter(AppDate__range=(StartDate-(EndDate-StartDate+timedelta(days=1)), EndDate-(EndDate-StartDate+timedelta(days=1))), UserID=request.user).count()
+            AppointmentCountTrend = 0
+            if AppointmentCountLast > 0 and AppointmentCount > 0:
+                AppointmentCountTrend = ((AppointmentCount - AppointmentCountLast) / AppointmentCountLast * 100)
+            
+            EarnedTotalsTrend = 0
+            if EarnedTotals > 0 and EarnedTotalsLast > 0:
+                EarnedTotalsTrend = ((EarnedTotals - EarnedTotalsLast) / EarnedTotalsLast * 100)
 
+            ServiceCountTrend = 0
+            if ServiceCount > 0 and ServiceCountLast > 0:
+                ServiceCountTrend = ((ServiceCount - ServiceCountLast) / ServiceCountLast * 100)
+            
             return Response({
                 'From' : StartDate,
                 "To":EndDate,
                 "ServiceCount": ServiceCount,
-                "ServiceCountLast": ServiceCountLast,
                 "TopServices": TopServices, 
                 "AppointmentCountByStatus": AppointmentCountByStatus,
-                "AppointmentCountByStatusLast": AppointmentCountByStatusLast,
+                "AppointmentCountTrend": AppointmentCountTrend,
                 "EarnedTotals": EarnedTotals,
-                "EarnedTotalsLast": EarnedTotalsLast,
-                "AppointmentAverage": AppointmentAverage,
-                
+                "EarnedTotalsTrend": EarnedTotalsTrend,
+                "ServiceCountTrend": ServiceCountTrend,
+                "AppointmentAverage": AppointmentAverage,       
                 "DailyRevenueAverage": DailyRevenueAverage,
                 # "TechTotalsByDate": TechTotalsByDate,
                 "TotalsByDayOfWeek": TotalsByDayOfWeek,
