@@ -385,8 +385,8 @@ class DashboardView(APIView):
             ServiceCount = Services.objects.filter(AppID__AppDate__range=(StartDate,EndDate),  AppID__UserID=request.user).count()
             ServiceCountLast = Services.objects.filter(AppID__AppDate__range=(StartDate-(EndDate-StartDate+timedelta(days=1)), EndDate-(EndDate-StartDate+timedelta(days=1))),  AppID__UserID=request.user).count()
             AppointmentCountByStatus = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user).values('AppStatus').annotate(Count=Count('AppStatus')).order_by('-Count')
-            EarnedTotals = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=  request.user, AppStatus='Closed').aggregate(Total=Sum('AppTotal'))['Total']
-            EarnedTotalsLast = Appointments.objects.filter(AppDate__range=(StartDate-(EndDate-StartDate+timedelta(days=1)), EndDate-(EndDate-StartDate+timedelta(days=1))), UserID=  request.user, AppStatus='Closed').aggregate(Total=Sum('AppTotal'))['Total']
+            EarnedTotals = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=  request.user, AppStatus='Closed').aggregate(Total=Sum('AppTotal'))['Total'] or 0
+            EarnedTotalsLast = Appointments.objects.filter(AppDate__range=(StartDate-(EndDate-StartDate+timedelta(days=1)), EndDate-(EndDate-StartDate+timedelta(days=1))), UserID=  request.user, AppStatus='Closed').aggregate(Total=Sum('AppTotal'))['Total'] or 0
             AppointmentAverage = Appointments.objects.filter(AppDate__range=(StartDate, EndDate), UserID=request.user,AppStatus='Closed').aggregate(Avg=Avg('AppTotal'),Max=Max('AppTotal'),Min=Min('AppTotal'))
             DailyRevenueAverage = Appointments.objects.filter(AppDate__range=(StartDate, EndDate), UserID=request.user, AppStatus='Closed').values('AppDate').annotate(Total=Sum('AppTotal')).aggregate(Avg=Avg('Total'),Max=Max('Total'),Min=Min('Total'))
             TotalsByDayOfWeek = Appointments.objects.filter(AppDate__range=(StartDate,EndDate), UserID=request.user, AppStatus='Closed').annotate(DayOfWeek=Extract('AppDate', 'week_day')).values('DayOfWeek').annotate(Total=Sum('AppTotal')).order_by('DayOfWeek')
